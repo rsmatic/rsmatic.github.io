@@ -109,6 +109,7 @@
   }
   .seat-strip .who { font-family: var(--serif); font-size: 25px; }
   .seat-strip .where { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 4px; font-weight: 600; }
+  .seat-strip .held { font-size: 12px; color: var(--dim); margin-top: 7px; }
 
   .ask { margin-top: 26px; }
   .ask h2 { font-size: 23px; text-align: center; }
@@ -184,6 +185,7 @@
     <div class="seat-strip">
       <div class="who" id="c-guest"></div>
       <div class="where" id="c-seat"></div>
+      <div class="held hidden" id="c-seatnote"></div>
     </div>
 
     <div id="c-note" class="small muted hidden" style="margin-top:16px;text-align:center"></div>
@@ -227,6 +229,7 @@
 <div id="toast"></div>
 <script src="app/config.js"></script>
 <script src="app/themes.js"></script>
+<script src="app/board.js"></script>
 <script src="app/invite.js"></script>
 </body>
 </html>

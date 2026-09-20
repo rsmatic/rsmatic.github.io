@@ -109,6 +109,21 @@ Ganito ang hugis ng link ng bisita:
 https://rsmatic.github.io/booking/i.html?t=8Kd2mPqR4xVnT
 ```
 
+### Isang bisita, maraming upuan
+
+Kapag pareho ang pangalan sa dalawa o higit pang upuan, isa lang silang imbitasyon.
+Hindi pinapansin ng pagtutugma ang malaki o maliit na letra at ang sobrang espasyo,
+kaya ang `Jed` at `  jed  ` ay iisa.
+
+- Sa imbitasyon: *Table · Seats 2, 3* at ang linyang *2 seats are reserved in your name.*
+- Sa mensaheng kinokopya mo: *Reserved for you: Table · Seats 2, 3 (2 seats)*
+- Sa board: may maliit na *2 seats* sa tabi ng pangalan ng mesa
+- **Isang sagot ang sumasakop sa lahat ng upuan niya** — hindi mangyayari na naka-lock
+  ang isang upuan niya samantalang hinihintay pa ang isa
+
+Ang upuang walang pangalan ay hindi kailanman sumasama sa iba. Kapag pinalitan mo ang
+pangalan sa isa sa kanila, maghihiwalay ulit ang imbitasyon nila.
+
 ### Coordinator
 
 Sa **Step 6 — Coordinator Access** pwede kang mag-isyu ng pangalawang susi para sa
@@ -303,7 +318,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            108 API checks laban sa tumatakbong server
+    ├── e2e.js            121 API checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 

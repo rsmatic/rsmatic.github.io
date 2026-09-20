@@ -145,6 +145,35 @@ export function createD1Store(d1) {
       return slotFromRow(await d1.prepare('SELECT * FROM slots WHERE id = ?').bind(id).first());
     },
 
+    /* A name may hold several seats. Matching is done in SQL so the update
+       is still one statement, and still cannot lose a concurrent answer. */
+    async listSlotsByGuest(eventId, nameKey) {
+      if (!nameKey) return [];
+      const res = await d1.prepare(
+        "SELECT * FROM slots WHERE eventId = ? AND guestName != '' " +
+        'AND lower(trim(guestName)) = ? ORDER BY tableName, CAST(seat AS INTEGER), seat',
+      ).bind(eventId, nameKey).all();
+      return (res.results || []).map(slotFromRow);
+    },
+
+    async updateSlotsByGuest(eventId, nameKey, patch) {
+      if (!nameKey) return 0;
+      const sets = [];
+      const binds = [];
+      for (const [field, val] of Object.entries(patch)) {
+        const col = SLOT_COLUMNS[field];
+        if (!col || col === 'id') continue;
+        sets.push(col + ' = ?');
+        binds.push(val === undefined ? null : val);
+      }
+      if (!sets.length) return 0;
+      const res = await d1.prepare(
+        'UPDATE slots SET ' + sets.join(', ') +
+        " WHERE eventId = ? AND guestName != '' AND lower(trim(guestName)) = ?",
+      ).bind(...binds, eventId, nameKey).run();
+      return (res.meta && res.meta.changes) || 0;
+    },
+
     async getSlotByToken(token) {
       return slotFromRow(await d1.prepare('SELECT * FROM slots WHERE token = ?').bind(token).first());
     },

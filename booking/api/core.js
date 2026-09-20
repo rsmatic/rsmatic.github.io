@@ -197,13 +197,19 @@ function guestNamePatch(slot, body) {
   return patch;
 }
 
+/** One person's name may hold several seats; they are one invitation. */
+const guestKey = (name) => str(name).toLowerCase();
+
 /** What a guest is allowed to see about their own seat. */
-function publicSlotView(slot, event) {
+function publicSlotView(slot, event, seats) {
+  const held = (seats && seats.length ? seats : [slot])
+    .map((s) => ({ table: s.table, seat: s.seat, label: s.label }));
   return {
     id: slot.id,
     label: slot.label,
     table: slot.table,
     seat: slot.seat,
+    seats: held,
     guestName: slot.guestName,
     status: slot.status,
     reason: slot.reason,
@@ -279,6 +285,11 @@ export function createApi({ store, adminKey }) {
       const event = await store.getEvent(slot.eventId);
       if (!event) throw new HttpError(404, 'This event no longer exists.');
 
+      // Everything this guest holds, so the invitation can show it as one.
+      const seatsHeld = slot.guestName
+        ? await store.listSlotsByGuest(slot.eventId, guestKey(slot.guestName))
+        : [slot];
+
       if (rest[1] === 'photo' && method === 'GET') {
         const photo = await store.getPhoto(event.id);
         if (!photo) throw new HttpError(404, 'This event has no photo.');
@@ -286,7 +297,7 @@ export function createApi({ store, adminKey }) {
       }
 
       if (method === 'GET') {
-        return { status: 200, data: publicSlotView(slot, event) };
+        return { status: 200, data: publicSlotView(slot, event, seatsHeld) };
       }
 
       if (method === 'POST') {
@@ -299,14 +310,27 @@ export function createApi({ store, adminKey }) {
         }
         // Every field is decided by the request alone, so this is a single
         // atomic write — two guests answering at once cannot clobber each other.
-        const updated = await store.updateSlotByToken(token, {
+        const patch = {
           status: body.attending ? 'confirmed' : 'declined',
           reason: body.attending ? null : reason.slice(0, 500),
           message: str(body.message).slice(0, 500) || null,
           respondedAt: new Date().toISOString(),
-        });
+        };
+
+        // A guest holding several seats answers for all of them at once, so
+        // the board never shows one of their seats confirmed and another not.
+        if (slot.guestName) {
+          await store.updateSlotsByGuest(slot.eventId, guestKey(slot.guestName), patch);
+        } else {
+          await store.updateSlotByToken(token, patch);
+        }
+
+        const updated = await store.getSlotByToken(token);
         if (!updated) throw new HttpError(404, 'This invitation is not valid.');
-        return { status: 200, data: publicSlotView(updated, event) };
+        const after = updated.guestName
+          ? await store.listSlotsByGuest(updated.eventId, guestKey(updated.guestName))
+          : [updated];
+        return { status: 200, data: publicSlotView(updated, event, after) };
       }
 
       throw new HttpError(405, 'Method not allowed.');

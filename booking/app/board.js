@@ -49,8 +49,37 @@
       collator.compare(a.seat || '', b.seat || '');
   }
 
+  /** Every seat held under one name — one person, one invitation. */
+  function seatsForGuest(allSlots, slot) {
+    var name = String(slot.guestName || '').trim().toLowerCase();
+    if (!name || !allSlots) return [slot];
+    return allSlots.filter(function (s) {
+      return String(s.guestName || '').trim().toLowerCase() === name;
+    }).sort(compareSlots);
+  }
+
+  /** One seat reads "Table 1 · Seat 2"; three read "Table 1 · Seats 2, 3, 4". */
+  function seatSummary(seats) {
+    if (!seats || !seats.length) return '';
+    if (seats.length === 1) return seats[0].label;
+
+    var order = [];
+    var byTable = {};
+    seats.forEach(function (s) {
+      var table = s.table || '';
+      if (!byTable[table]) { byTable[table] = []; order.push(table); }
+      byTable[table].push(s.seat);
+    });
+
+    return order.map(function (table) {
+      var list = byTable[table];
+      return (table ? table + ' \u00b7 ' : '') +
+        'Seat' + (list.length > 1 ? 's' : '') + ' ' + list.join(', ');
+    }).join('   \u00b7   ');
+  }
+
   /** The message that gets pasted into Messenger or Viber. */
-  function inviteMessage(ev, slot, link) {
+  function inviteMessage(ev, slot, link, allSlots) {
     if (!ev) return link;
     var who = slot.guestName || 'Friend';
     var when = formatDate(ev.eventDate) + (ev.startTime ? ', ' + formatTime(ev.startTime) : '');
@@ -62,7 +91,9 @@
     ];
     if (ev.venue) lines.push('Venue: ' + ev.venue);
     if (ev.dressCode) lines.push('Dress code: ' + ev.dressCode);
-    lines.push('Reserved for you: ' + slot.label);
+    var seats = seatsForGuest(allSlots, slot);
+    lines.push('Reserved for you: ' + seatSummary(seats) +
+      (seats.length > 1 ? '  (' + seats.length + ' seats)' : ''));
     lines.push('');
     lines.push('Please let us know here if you can make it:');
     lines.push(link);
@@ -100,7 +131,7 @@
     }).join('');
   }
 
-  function slotRow(s, allowRemove) {
+  function slotRow(s, allowRemove, mates) {
     var note = '';
     if (s.status === 'declined') {
       note = '<div class="note declined"><b>Reason:</b> ' + escapeHtml(s.reason || '—') +
@@ -112,7 +143,8 @@
     }
     var named = s.guestName ? '' : 'disabled';
     return '<div class="slot ' + s.status + '" data-slot="' + escapeHtml(s.id) + '">' +
-      '<div class="seat">' + escapeHtml(s.seat) + '<small>' + escapeHtml(s.table) + '</small></div>' +
+      '<div class="seat">' + escapeHtml(s.seat) + '<small>' + escapeHtml(s.table) +
+        (mates > 1 ? ' &middot; ' + mates + ' seats' : '') + '</small></div>' +
       '<div><input data-field="guestName" placeholder="Guest name" value="' + escapeHtml(s.guestName) + '" /></div>' +
       '<div><input data-field="guestContact" placeholder="Viber / FB (optional)" value="' + escapeHtml(s.guestContact || '') + '" /></div>' +
       '<div class="actions">' +
@@ -148,7 +180,16 @@
       return;
     }
 
-    o.host.innerHTML = o.slots.map(function (s) { return slotRow(s, o.allowRemove); }).join('');
+    // How many seats each name holds, so a shared name is visible at a glance.
+    var mates = {};
+    (o.all || o.slots).forEach(function (s) {
+      var name = String(s.guestName || '').trim().toLowerCase();
+      if (name) mates[name] = (mates[name] || 0) + 1;
+    });
+
+    o.host.innerHTML = o.slots.map(function (s) {
+      return slotRow(s, o.allowRemove, mates[String(s.guestName || '').trim().toLowerCase()] || 1);
+    }).join('');
 
     var byId = {};
     o.slots.forEach(function (s) { byId[s.id] = s; });
@@ -209,6 +250,8 @@
     formatTime: formatTime,
     compareSlots: compareSlots,
     inviteMessage: inviteMessage,
+    seatsForGuest: seatsForGuest,
+    seatSummary: seatSummary,
     copyText: copyText,
     renderStats: renderStats,
     renderSlots: renderSlots,

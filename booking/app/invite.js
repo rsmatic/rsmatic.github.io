@@ -187,7 +187,19 @@
     }
 
     $('c-guest').textContent = slot.guestName || 'Guest';
-    $('c-seat').textContent = slot.label;
+
+    // One person may hold several seats; the invitation shows them as one.
+    var seats = (slot.seats && slot.seats.length)
+      ? slot.seats
+      : [{ table: slot.table, seat: slot.seat, label: slot.label }];
+    $('c-seat').textContent = window.AbyBoard.seatSummary(seats);
+    var seatNote = $('c-seatnote');
+    if (seats.length > 1) {
+      seatNote.textContent = seats.length + ' seats are reserved in your name.';
+      seatNote.classList.remove('hidden');
+    } else {
+      seatNote.classList.add('hidden');
+    }
 
     if (ev.note) {
       $('c-note').textContent = ev.note;
@@ -221,6 +233,8 @@
     $('submitBtn').disabled = choice === null;
   }
 
+  function seatCount(s) { return (s.seats && s.seats.length) || 1; }
+
   function renderResult() {
     $('askBox').classList.add('hidden');
     $('resultBox').classList.remove('hidden');
@@ -230,13 +244,15 @@
     $('r-icon').style.color = attending ? 'var(--ok)' : 'var(--no)';
     $('r-title').textContent = attending ? 'Thank you! Your seat is booked.' : 'Thank you for letting us know.';
     $('r-body').textContent = attending
-      ? 'The seat is held in your name and will not be given to anyone else. See you on ' +
+      ? (seatCount(slot) > 1 ? 'Your ' + seatCount(slot) + ' seats are' : 'The seat is') +
+        ' held in your name and will not be given to anyone else. See you on ' +
         formatShortDate(slot.event.eventDate) + '!'
       : 'We have noted that you cannot come. We will miss you, but thank you for telling us.';
 
     var rows = [
       '<div><b>Guest:</b> ' + escapeHtml(slot.guestName || '—') + '</div>',
-      '<div><b>Seat:</b> ' + escapeHtml(slot.label) + '</div>',
+      '<div><b>' + (seatCount(slot) > 1 ? 'Seats' : 'Seat') + ':</b> ' +
+        escapeHtml(window.AbyBoard.seatSummary(slot.seats || [])) + '</div>',
       '<div><b>Answer:</b> ' + (attending ? 'Coming' : 'Not coming') + '</div>',
     ];
     if (!attending && slot.reason) rows.push('<div><b>Reason:</b> ' + escapeHtml(slot.reason) + '</div>');

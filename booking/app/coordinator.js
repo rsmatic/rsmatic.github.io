@@ -66,7 +66,9 @@
   }
 
   function inviteLink(slot) { return pageBase() + 'i.html?t=' + slot.token; }
-  function inviteMessage(slot) { return B.inviteMessage(state.event, slot, inviteLink(slot)); }
+  function inviteMessage(slot) {
+    return B.inviteMessage(state.event, slot, inviteLink(slot), state.slots);
+  }
 
   /* --------------------------------------------------------------- gate */
 
@@ -149,6 +151,7 @@
     B.renderSlots({
       host: $('slotList'),
       slots: slots,
+      all: state.slots,
       emptyText: state.slots.length ? 'Nothing matches this filter.' : '',
       allowRemove: false,
       link: inviteLink,

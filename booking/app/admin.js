@@ -106,7 +106,7 @@
   }
 
   function inviteMessage(slot) {
-    return B.inviteMessage(currentEvent(), slot, inviteLink(slot));
+    return B.inviteMessage(currentEvent(), slot, inviteLink(slot), eventSlots());
   }
 
   /* --------------------------------------------------------------- gate */
@@ -417,6 +417,7 @@
     B.renderSlots({
       host: host,
       slots: slots,
+      all: all,
       emptyText: all.length ? 'Nothing matches this filter.' : '',
       allowRemove: true,
       link: inviteLink,

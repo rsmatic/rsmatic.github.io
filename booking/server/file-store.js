@@ -125,6 +125,31 @@ export const fileStore = {
     return data.slots.find((s) => s.token === token) || null;
   },
 
+  /* A name may hold several seats; they answer as one. */
+  async listSlotsByGuest(eventId, nameKey) {
+    if (!nameKey) return [];
+    const data = await readFile();
+    return data.slots
+      .filter((s) => s.eventId === eventId && s.guestName &&
+        s.guestName.trim().toLowerCase() === nameKey)
+      .sort(compareSlots);
+  },
+
+  async updateSlotsByGuest(eventId, nameKey, patch) {
+    if (!nameKey) return 0;
+    return transaction((data) => {
+      let count = 0;
+      data.slots.forEach((s) => {
+        if (s.eventId === eventId && s.guestName &&
+          s.guestName.trim().toLowerCase() === nameKey) {
+          Object.assign(s, patch);
+          count += 1;
+        }
+      });
+      return count;
+    });
+  },
+
   async createSlots(slots) {
     await transaction((data) => { data.slots.push(...slots); });
     return slots;

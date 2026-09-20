@@ -364,6 +364,61 @@ async function main() {
     !r.j.events.find((e) => e.id === eventId).photoUpdatedAt,
     JSON.stringify(r.j.events.find((e) => e.id === eventId).photoUpdatedAt));
 
+  console.log('\n== one guest, several seats ==');
+  r = await call('/api/events/' + eventId + '/slots', { method: 'POST', body: { table: 'Merge', count: 4 } });
+  const m = r.j.created;
+  // The same person on two seats, someone else on a third.
+  await call('/api/slots/' + m[0].id, { method: 'PATCH', body: { guestName: 'Jed' } });
+  await call('/api/slots/' + m[1].id, { method: 'PATCH', body: { guestName: '  jed  ' } });
+  await call('/api/slots/' + m[2].id, { method: 'PATCH', body: { guestName: 'Tita Baby' } });
+
+  r = await call('/api/invite/' + m[0].token, { admin: false });
+  ok('the invitation lists both of that name\'s seats',
+    r.j.seats.length === 2, JSON.stringify(r.j.seats));
+  ok('matching ignores case and stray spaces',
+    r.j.seats.map((x) => x.seat).join(',') === m[0].seat + ',' + m[1].seat,
+    r.j.seats.map((x) => x.seat).join(','));
+  ok('someone else is not swept in',
+    (await call('/api/invite/' + m[2].token, { admin: false })).j.seats.length === 1);
+
+  r = await call('/api/invite/' + m[0].token, { admin: false, method: 'POST', body: { attending: true } });
+  ok('answering once returns all of their seats', r.j.seats.length === 2);
+  r = await call('/api/events');
+  const merged = r.j.slots.filter((x) => x.table === 'Merge');
+  ok('both seats lock together',
+    merged.find((x) => x.id === m[0].id).status === 'confirmed' &&
+    merged.find((x) => x.id === m[1].id).status === 'confirmed',
+    merged.map((x) => x.status).join(','));
+  ok('the other guest is untouched',
+    merged.find((x) => x.id === m[2].id).status === 'invited',
+    merged.find((x) => x.id === m[2].id).status);
+  ok('the empty seat stays open',
+    merged.find((x) => x.id === m[3].id).status === 'open');
+
+  r = await call('/api/invite/' + m[1].token, { admin: false, method: 'POST', body: { attending: false, reason: 'May lakad' } });
+  ok('changing the answer from the other link moves both',
+    r.j.status === 'declined');
+  r = await call('/api/events');
+  ok('both seats now read declined',
+    r.j.slots.filter((x) => x.table === 'Merge' && x.status === 'declined').length === 2);
+
+  // Renaming one of them splits the pair again.
+  await call('/api/slots/' + m[1].id, { method: 'PATCH', body: { guestName: 'Jed Junior' } });
+  ok('renaming one seat separates the invitations',
+    (await call('/api/invite/' + m[0].token, { admin: false })).j.seats.length === 1);
+
+  // A seat with no name must never merge with another nameless seat.
+  await call('/api/slots/' + m[0].id, { method: 'PATCH', body: { guestName: '' } });
+  r = await call('/api/invite/' + m[0].token, { admin: false });
+  ok('nameless seats stand alone', r.j.seats.length === 1, JSON.stringify(r.j.seats));
+  r = await call('/api/invite/' + m[0].token, { admin: false, method: 'POST', body: { attending: true } });
+  ok('a nameless seat can still answer for itself', r.j.status === 'confirmed');
+  r = await call('/api/events');
+  ok('and does not drag the other nameless seat with it',
+    r.j.slots.find((x) => x.id === m[3].id).status === 'open',
+    r.j.slots.find((x) => x.id === m[3].id).status);
+
+  await call('/api/events/' + eventId + '/slots', { method: 'DELETE' });
   console.log('\n== coordinator access ==');
   // The seats were all removed a moment ago, so give this section its own.
   await call('/api/events/' + eventId + '/slots', { method: 'POST', body: { table: 'Coord', count: 3 } });
