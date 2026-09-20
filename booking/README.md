@@ -211,6 +211,8 @@ Sa lokal, iwanang `api: ''` sa `app/config.js` — kapareho kasi ng origin ang A
 ```bash
 node server/server.js          # isang terminal
 node test/e2e.js               # isa pa
+
+node test/admin-form.js        # hindi kailangan ng server
 ```
 
 Pwede ring patakbuhin laban sa tunay na Worker:
@@ -245,7 +247,9 @@ booking/
 │   ├── server.js         Lokal na server (static + API)
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
-└── test/e2e.js           62 checks
+└── test/
+    ├── e2e.js            62 API checks laban sa tumatakbong server
+    └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 
 Iisa ang `api/core.js` para sa dalawang backend, kaya hindi sila magkakaiba ng ugali —

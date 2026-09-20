@@ -15,6 +15,7 @@
     eventId: '',
     filter: 'all',
     search: '',
+    detailDirty: false,
     lastSnapshot: '',
   };
 
@@ -237,6 +238,7 @@
     Array.prototype.forEach.call(host.querySelectorAll('[data-event]'), function (btn) {
       btn.addEventListener('click', function () {
         state.eventId = btn.getAttribute('data-event');
+        state.detailDirty = false;
         render();
       });
     });
@@ -276,7 +278,21 @@
     });
   }
 
+  var UNSAVED = '  \u2022  unsaved changes';
+
+  function markDetailDirty() {
+    if (state.detailDirty) return;
+    state.detailDirty = true;
+    var summary = $('detailSummary');
+    if (summary && summary.textContent.indexOf(UNSAVED) < 0) summary.textContent += UNSAVED;
+  }
+
+  /* The board reloads every 15 seconds. Refilling the form on every reload
+     would throw away edits made since the last save — which is exactly what
+     happened to the age setting: pick "Hide it", wait, and the reload put
+     "Show the age" back before Save was ever pressed. */
   function fillDetailForm(ev) {
+    if (state.detailDirty) return;
     var map = {
       'd-title': ev.title, 'd-celebrant': ev.celebrant, 'd-nickname': ev.nickname,
       'd-birthDate': ev.birthDate, 'd-eventDate': ev.eventDate, 'd-startTime': ev.startTime,
@@ -455,7 +471,12 @@
       body[f] = $('d-' + f).value;
     });
     api('/events/' + state.eventId, { method: 'PATCH', body: body })
-      .then(load).then(function () { toast('Details updated.'); }).catch(fail);
+      .then(function () {
+        state.detailDirty = false;
+        return load();
+      })
+      .then(function () { toast('Details updated.'); })
+      .catch(fail);
   });
 
   $('deleteEventBtn').addEventListener('click', function () {
@@ -539,6 +560,9 @@
     refreshLinkNotes();
   });
 
+  $('detailForm').addEventListener('input', markDetailDirty);
+  $('detailForm').addEventListener('change', markDetailDirty);
+
   $('refreshBtn').addEventListener('click', function () { load(); });
 
   /* One file with every event, seat and answer — your offline backup. */
@@ -562,7 +586,7 @@
   setInterval(function () {
     if (!state.key) return;
     var active = document.activeElement;
-    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+    if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return;
     load();
   }, 15000);
 
