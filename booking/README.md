@@ -1,31 +1,82 @@
 # Aby's 41st — Booking System
 
 Seat reservation at RSVP para sa kaarawan ni **Mary Abegail "Aby" Matic** (Oktubre 25, 2026).
-Walang dependency — `node server.js` lang at tumatakbo na. Ang database ay tunay na JSON file:
-[`data/db.json`](data/db.json).
+
+- **Mga page** — static, naka-host sa GitHub Pages: <https://rsmatic.github.io/booking/>
+- **Data** — Cloudflare Worker + D1, libre at laging bukas kahit patay ang PC mo
+- **Backup** — may *Export JSON* button, at may kambal na lokal na server na JSON file ang database
 
 ---
 
-## Paano patakbuhin
+## Bakit hindi puro GitHub Pages
+
+Static hosting lang ang GitHub Pages — walang tumatakbong server doon, kaya walang makakasulat
+ng sagot ng bisita. Ang mga page ay nasa GitHub Pages pa rin; ang Cloudflare Worker na lang ang
+nagse-save ng data. Isang linya sa [`app/config.js`](app/config.js) ang nag-uugnay sa dalawa.
+
+```
+https://rsmatic.github.io/booking/        GitHub Pages (static)
+  ├── index.html    admin console
+  ├── i.html        page ng bisita
+  └── app/config.js  ←  dito nakasulat ang URL ng Worker
+              │
+              │  fetch()
+              ▼
+https://aby41-api.<ikaw>.workers.dev      Cloudflare Worker (libre)
+  └── D1 (SQLite)  ←  ANG DATABASE
+```
+
+---
+
+## Setup ng Cloudflare (isang beses lang)
+
+Kailangan ng libreng Cloudflare account. Lahat ng command ay mula sa `booking/` folder.
 
 ```bash
 cd booking
-node server.js
+
+# 1. Mag-login (magbubukas ng browser)
+npx wrangler login
+
+# 2. Gumawa ng D1 database
+npx wrangler d1 create aby41
 ```
 
-Buksan ang **http://localhost:3000/admin**. Ang default admin key ay `aby1025`.
-
-Palitan ang key bago ipa-online:
+Magbibigay ito ng `database_id`. **I-paste iyon sa [`worker/wrangler.toml`](worker/wrangler.toml)**,
+kapalit ng `PALITAN_NG_TUNAY_NA_ID`.
 
 ```bash
-# Windows PowerShell
-$env:ADMIN_KEY = "kahit-anong-lihim"; node server.js
+# 3. Ilagay ang mga table at ang event ni Aby
+npx wrangler d1 execute aby41 --remote --file=worker/schema.sql --config worker/wrangler.toml
 
-# Git Bash / Linux / Mac
-ADMIN_KEY="kahit-anong-lihim" node server.js
+# 4. Itakda ang admin key (ito ang ipapasok mo sa admin page — huwag ibahagi)
+npx wrangler secret put ADMIN_KEY --config worker/wrangler.toml
+
+# 5. I-deploy
+npx wrangler deploy --config worker/wrangler.toml
 ```
 
-Pwede ring palitan ang port: `PORT=8080 node server.js`.
+Magbibigay ang huling command ng URL, halimbawa `https://aby41-api.rsmatic.workers.dev`.
+
+**Huling hakbang:** i-paste ang URL na iyon sa [`app/config.js`](app/config.js):
+
+```js
+window.ABY_CONFIG = {
+  api: 'https://aby41-api.rsmatic.workers.dev',
+};
+```
+
+Tapos:
+
+```bash
+git add -A && git commit -m "Point booking front-end at the Worker" && git push
+```
+
+Pagkatapos ng ilang minuto, gagana na ang <https://rsmatic.github.io/booking/>.
+
+> Kung magpapalit ka ng domain o magda-dagdag ng bagong address, idagdag ito sa
+> `ALLOWED_ORIGINS` sa `worker/wrangler.toml` at mag-deploy ulit — kung hindi, hahadlangan
+> ito ng CORS.
 
 ---
 
@@ -34,12 +85,18 @@ Pwede ring palitan ang port: `PORT=8080 node server.js`.
 1. **Gumawa ng event** sa admin — o gamitin na lang ang naka-handa nang `Aby's 41st Birthday`.
 2. **Gumawa ng slots** — isang slot = isang upuan. Bawat pindot ay gumagawa ng buong mesa
    (halimbawa: `Table 1`, 10 upuan).
-3. **Ilagay ang pangalan ng bisita** sa bawat upuan. Awtomatikong nase-save habang nagta-type ka.
+3. **Ilagay ang pangalan ng bisita** sa bawat upuan. Awtomatikong nase-save.
 4. **Kopyahin ang link o ang buong mensahe**, tapos i-paste sa Messenger o Viber.
-   Isang link = isang upuan (`/i/<token>`), kaya hindi pwedeng magkapalit ang mga bisita.
+   Isang link = isang upuan, kaya hindi pwedeng magkapalit ang mga bisita.
 5. **Sasagot ang bisita** sa link — *Oo, makakarating ako* o *Hindi ako makakarating* na may dahilan.
 6. **Mag-lo-lock ang upuan** sa admin board. Nagre-refresh ito kada 15 segundo, kaya lalabas ang
    sagot kahit hindi mo pindutin ang refresh.
+
+Ganito ang hugis ng link ng bisita:
+
+```
+https://rsmatic.github.io/booking/i.html?t=8Kd2mPqR4xVnT
+```
 
 ### Mga status ng upuan
 
@@ -55,39 +112,49 @@ Kung may maling link na naipadala, pindutin ang **Bagong link** — hindi na gag
 
 ---
 
-## Ang link na ipapadala sa bisita
+## Backup
 
-Default ay `http://localhost:3000/i/<token>` — gumagana lang ito sa PC mo.
-Para maabot ito ng mga bisita, kailangan ng pampublikong address. Piliin ang isa:
+Dalawang paraan:
 
-**A. Tunnel papunta sa PC mo (pinakamabilis, libre)**
+- **Export JSON** na button sa admin header — nagda-download ng isang file na naglalaman ng
+  lahat ng event, upuan at sagot.
+- Buong database mula sa Cloudflare:
 
-```bash
-# hiwalay na terminal habang tumatakbo ang server
-npx cloudflared tunnel --url http://localhost:3000
-```
+  ```bash
+  npx wrangler d1 export aby41 --remote --output=aby41-backup.sql --config worker/wrangler.toml
+  ```
 
-Magbibigay ito ng URL tulad ng `https://xxxx.trycloudflare.com`. I-paste iyon sa
-**Hakbang 4 — Public base URL** sa admin, at doon na kukunin ang mga link.
-Tandaan: gumagana lang habang nakabukas ang PC mo at ang tunnel.
-
-**B. I-deploy sa hosting na may persistent disk** (Railway volume, Fly.io volume, VPS).
-I-mount ang disk sa `booking/data/` para hindi mabura ang `db.json` tuwing redeploy.
-
-> Hindi ito kayang i-host ng GitHub Pages — static hosting lang iyon, at kailangan ng
-> tumatakbong server para may makasulat sa `db.json`.
+Sulit mag-backup pagkatapos ng bawat batch ng confirmation.
 
 ---
 
-## Backup
+## Lokal na pagpapatakbo (opsyonal)
 
-Ang buong sistema ay nasa isang file. Kopyahin lang ito:
+May kambal na Node server na kaparehong API pero JSON file ang database. Para sa pag-test,
+o kung gusto mong may kopya ka sa PC mo.
 
 ```bash
-cp data/db.json data/db.backup.json
+node server/server.js
+# http://localhost:3000  — admin key: aby1025
 ```
 
-Bago ang event, sulit mag-backup pagkatapos ng mga bagong confirmation.
+Ang database nito ay `server/data/db.json` — hindi ito kasama sa git, kaya hindi ito mapupunta
+sa GitHub Pages kasama ang pangalan at token ng mga bisita.
+
+Sa lokal, iwanang `api: ''` sa `app/config.js` — kapareho kasi ng origin ang API.
+
+### Test suite
+
+```bash
+node server/server.js          # isang terminal
+node test/e2e.js               # isa pa
+```
+
+Pwede ring patakbuhin laban sa tunay na Worker:
+
+```bash
+API=https://aby41-api.rsmatic.workers.dev KEY=ang-key-mo node test/e2e.js
+```
 
 ---
 
@@ -95,61 +162,35 @@ Bago ang event, sulit mag-backup pagkatapos ng mga bagong confirmation.
 
 ```
 booking/
-├── server.js          HTTP server + API (zero dependencies)
-├── lib/db.js          JSON file storage — atomic writes, serialized transactions
-├── data/db.json       ANG DATABASE
-└── public/
-    ├── admin.html     Admin console
-    ├── admin.js
-    ├── invite.html    Ang nakikita ng bisita
-    ├── invite.js
-    └── styles.css
+├── index.html            Admin console          ← /booking/
+├── i.html                Page ng bisita         ← /booking/i.html?t=TOKEN
+├── app/
+│   ├── config.js         URL ng API (ito lang ang binabago pagka-deploy)
+│   ├── admin.js
+│   ├── invite.js
+│   └── styles.css
+├── api/core.js           Lahat ng logic ng API — iisa para sa Worker at sa Node
+├── worker/
+│   ├── wrangler.toml     Config ng Cloudflare
+│   ├── schema.sql        Mga table + ang event ni Aby
+│   └── src/
+│       ├── index.js      Entry point ng Worker (CORS, routing)
+│       └── d1-store.js   Storage sa D1
+├── server/
+│   ├── server.js         Lokal na server (static + API)
+│   ├── file-store.js     Storage sa JSON file
+│   └── data/db.json      Lokal na database (hindi naka-commit)
+└── test/e2e.js           35 checks
 ```
 
-### Hugis ng record
-
-```json
-{
-  "events": [
-    {
-      "id": "evt_aby41",
-      "title": "Aby's 41st Birthday",
-      "celebrant": "Mary Abegail Matic",
-      "nickname": "Aby",
-      "birthDate": "1985-10-25",
-      "eventDate": "2026-10-25",
-      "startTime": "18:00",
-      "venue": "",
-      "dressCode": "",
-      "note": "",
-      "rsvpDeadline": "2026-10-18",
-      "hostName": "Rexter Matic"
-    }
-  ],
-  "slots": [
-    {
-      "id": "slt_1a2b3c4d5e",
-      "eventId": "evt_aby41",
-      "table": "Table 1",
-      "seat": "1",
-      "label": "Table 1 · Seat 1",
-      "guestName": "Juan Dela Cruz",
-      "guestContact": "09171234567",
-      "token": "m947759XdTjC",
-      "status": "confirmed",
-      "reason": null,
-      "message": "Happy birthday Aby!",
-      "respondedAt": "2026-10-01T09:12:44.001Z"
-    }
-  ]
-}
-```
+Iisa ang `api/core.js` para sa dalawang backend, kaya hindi sila magkakaiba ng ugali —
+kung ano ang na-test sa lokal, iyon din ang tumatakbo sa Cloudflare.
 
 ---
 
 ## API
 
-Ang mga admin endpoint ay kailangan ng header na `x-admin-key`. Ang guest endpoint ay hindi.
+Kailangan ng header na `x-admin-key` ang mga admin endpoint. Ang guest endpoint ay hindi.
 
 | Method | Path | Para saan |
 |---|---|---|
@@ -163,6 +204,7 @@ Ang mga admin endpoint ay kailangan ng header na `x-admin-key`. Ang guest endpoi
 | `POST` | `/api/slots/:id/token` | Bagong link (pinapatay ang luma) |
 | `POST` | `/api/slots/:id/reset` | Burahin ang sagot ng bisita |
 | `DELETE` | `/api/slots/:id` | Alisin ang upuan |
+| `GET` | `/api/export` | Buong database bilang JSON |
 | `GET` | `/api/invite/:token` | Detalye ng imbitasyon (pampubliko) |
 | `POST` | `/api/invite/:token` | Sagot — `{ attending, reason, message }` |
 
@@ -170,7 +212,11 @@ Ang mga admin endpoint ay kailangan ng header na `x-admin-key`. Ang guest endpoi
 
 ## Mga dapat tandaan
 
-- Ang admin key ang nag-iisang harang sa admin console. Palitan ito bago ilagay online.
-- Ang link ng bisita ay hulaan-proof (72-bit random token), pero sinumang makakuha ng link
-  ay pwedeng sumagot para sa upuang iyon — gaya ng ordinaryong RSVP link.
+- Pampubliko ang admin page — ang `ADMIN_KEY` ang nag-iisang harang. Gumamit ng mahabang key
+  at itago ito bilang Worker secret, hindi sa code.
+- Ang link ng bisita ay may 13-character random token (~75 bits) — hindi ito mahuhulaan.
+  Pero sinumang makakuha ng link ay pwedeng sumagot para sa upuang iyon, gaya ng ordinaryong
+  RSVP link. Kung may namali, gumawa ng bagong link para sa upuan.
+- Hindi kasama sa git ang `server/data/`, kaya walang pangalan ng bisita na napupunta sa
+  GitHub. Kung mag-backup ka gamit ang Export JSON, huwag i-commit ang file na iyon.
 - Walang email o SMS dito. Ikaw ang nagpapadala ng link sa Messenger o Viber.

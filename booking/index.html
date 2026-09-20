@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23170e14'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='%23e7c27d' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
-<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="app/styles.css" />
 <style>
   .shell { max-width: 1120px; margin: 0 auto; padding: 28px 16px 80px; }
 
@@ -139,6 +139,7 @@
     </div>
     <div class="row">
       <span class="tiny-text muted" id="syncNote">—</span>
+      <button class="ghost tiny" id="exportBtn" type="button">Export JSON</button>
       <button class="ghost tiny" id="refreshBtn" type="button">I-refresh</button>
       <button class="ghost tiny" id="lockBtn" type="button">Lock</button>
     </div>
@@ -224,13 +225,14 @@
     <!-- 4. LINK BASE -->
     <section class="block">
       <h2><span class="step">4</span> Link na Ipapadala</h2>
-      <p class="hint">Ito ang address na makikita ng bisita. Kung gumagamit ka ng tunnel o hosting, dito mo ilagay ang pampublikong URL.</p>
+      <p class="hint">Awtomatikong kinukuha ito sa address ng page na ito, kaya karaniwang hindi mo na kailangang galawin. Palitan lang kung may sarili kang domain.</p>
       <div class="panel">
         <div class="field">
-          <label for="baseUrl">Public base URL</label>
-          <input id="baseUrl" placeholder="https://aby41.example.com" />
+          <label for="baseUrl">Base URL ng imbitasyon</label>
+          <input id="baseUrl" placeholder="https://rsmatic.github.io/booking/" />
         </div>
-        <p class="tiny-text muted" style="margin:8px 0 0">Halimbawa ng magiging link: <span id="baseSample" style="color:var(--gold)"></span></p>
+        <p class="tiny-text muted" style="margin:8px 0 0">Ganito ang magiging link: <span id="baseSample" style="color:var(--gold)"></span></p>
+        <p class="tiny-text muted" style="margin:6px 0 0">API: <span id="apiNote" style="color:var(--gold)"></span></p>
       </div>
     </section>
 
@@ -257,6 +259,7 @@
 </div>
 
 <div id="toast"></div>
-<script src="/admin.js"></script>
+<script src="app/config.js"></script>
+<script src="app/admin.js"></script>
 </body>
 </html>

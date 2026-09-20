@@ -59,6 +59,12 @@
     toastTimer = setTimeout(function () { el.className = ''; }, 2800);
   }
 
+  /** Where the API lives: the Worker URL from app/config.js, or this origin. */
+  function apiBase() {
+    var cfg = window.ABY_CONFIG || {};
+    return String(cfg.api || '').trim().replace(/\/+$/, '');
+  }
+
   function api(path, options) {
     options = options || {};
     var init = {
@@ -69,21 +75,37 @@
       init.headers['Content-Type'] = 'application/json';
       init.body = JSON.stringify(options.body);
     }
-    return fetch('/api' + path, init).then(function (res) {
+    return fetch(apiBase() + '/api' + path, init).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
         if (!res.ok) throw new Error(data.error || 'Request failed (' + res.status + ')');
         return data;
       });
+    }, function () {
+      throw new Error('Hindi maabot ang API' + (apiBase() ? ' sa ' + apiBase() : '') +
+        '. Tingnan ang app/config.js.');
     });
   }
 
   function fail(err) { toast(err.message, true); }
 
-  function baseUrl() {
-    return ($('baseUrl').value || '').trim().replace(/\/+$/, '') || window.location.origin;
+  /** The folder this page sits in — e.g. https://rsmatic.github.io/booking/ */
+  function pageBase() {
+    return window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
   }
 
-  function inviteLink(slot) { return baseUrl() + '/i/' + slot.token; }
+  function baseUrl() {
+    var typed = ($('baseUrl').value || '').trim();
+    return (typed || pageBase()).replace(/\/+$/, '') + '/';
+  }
+
+  function inviteLink(slot) { return baseUrl() + 'i.html?t=' + slot.token; }
+
+  function refreshLinkNotes() {
+    var sample = $('baseSample');
+    if (sample) sample.textContent = baseUrl() + 'i.html?t=xxxxxxxxxxxxx';
+    var note = $('apiNote');
+    if (note) note.textContent = apiBase() || window.location.origin + '  (kaparehong origin)';
+  }
 
   function copy(text) {
     if (navigator.clipboard && window.isSecureContext) {
@@ -129,17 +151,22 @@
   /* --------------------------------------------------------------- gate */
 
   function unlock(key) {
-    return fetch('/api/session', {
+    return fetch(apiBase() + '/api/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: key }),
     }).then(function (res) {
-      if (!res.ok) throw new Error('Maling admin key.');
+      if (res.status === 401) throw new Error('Maling admin key.');
+      if (!res.ok) throw new Error('Hindi tumugon ang API (' + res.status + '). Tingnan ang app/config.js.');
       state.key = key;
       try { localStorage.setItem(KEY_STORE, key); } catch (e) { /* private mode */ }
       $('gate').classList.add('hidden');
       $('app').classList.remove('hidden');
       return load();
+    }, function () {
+      throw new Error(apiBase()
+        ? 'Hindi maabot ang API sa ' + apiBase() + '. Naka-deploy na ba ang Worker?'
+        : 'Walang nakatakdang API. I-set ang api sa app/config.js, o patakbuhin ang node server/server.js.');
     });
   }
 
@@ -178,7 +205,7 @@
     $('eventScope').classList.toggle('hidden', !ev);
     if (!ev) return;
     fillDetailForm(ev);
-    $('baseSample').textContent = baseUrl() + '/i/xxxxxxx';
+    refreshLinkNotes();
     renderStats();
     renderSlots();
   }
@@ -415,10 +442,26 @@
 
   $('baseUrl').addEventListener('input', function () {
     try { localStorage.setItem(BASE_STORE, $('baseUrl').value.trim()); } catch (e) { /* ignore */ }
-    $('baseSample').textContent = baseUrl() + '/i/xxxxxxx';
+    refreshLinkNotes();
   });
 
   $('refreshBtn').addEventListener('click', function () { load(); });
+
+  /* One file with every event, seat and answer — your offline backup. */
+  $('exportBtn').addEventListener('click', function () {
+    api('/export').then(function (data) {
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'aby41-db-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      toast('Na-download ang JSON backup.');
+    }).catch(fail);
+  });
 
   /* Poll so a guest's answer shows up without touching anything — but never
      while a field is being edited, or the typing would be wiped out. */
@@ -435,7 +478,7 @@
     var savedBase = localStorage.getItem(BASE_STORE);
     if (savedBase) $('baseUrl').value = savedBase;
   } catch (e) { /* ignore */ }
-  $('baseSample').textContent = baseUrl() + '/i/xxxxxxx';
+  refreshLinkNotes();
 
   var saved = null;
   try { saved = localStorage.getItem(KEY_STORE); } catch (e) { /* ignore */ }

@@ -1,0 +1,17 @@
+name = "aby41-api"
+main = "src/index.js"
+compatibility_date = "2026-05-01"
+
+# Sino ang pwedeng tumawag sa API na ito mula sa browser.
+# Idagdag dito ang kahit anong bagong domain na gagamitin mo.
+[vars]
+ALLOWED_ORIGINS = "https://rsmatic.github.io,http://localhost:3000,http://127.0.0.1:3000"
+
+# Palitan ang database_id ng ibibigay ng:  npx wrangler d1 create aby41
+[[d1_databases]]
+binding = "DB"
+database_name = "aby41"
+database_id = "PALITAN_NG_TUNAY_NA_ID"
+
+# Ang ADMIN_KEY ay secret, hindi nakalagay dito:
+#   npx wrangler secret put ADMIN_KEY

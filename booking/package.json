@@ -1,12 +1,14 @@
 {
   "name": "aby41-booking",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Seat reservation + RSVP system for Mary Abegail 'Aby' Matic's 41st birthday",
-  "main": "server.js",
+  "type": "module",
+  "description": "Seat reservation + RSVP for Mary Abegail 'Aby' Matic's 41st birthday. Static pages on GitHub Pages, API on Cloudflare Workers + D1, with a local Node/JSON-file twin for offline use.",
   "engines": { "node": ">=18" },
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node server/server.js",
+    "test": "node test/e2e.js",
+    "worker:dev": "wrangler dev --config worker/wrangler.toml",
+    "worker:deploy": "wrangler deploy --config worker/wrangler.toml"
   }
 }

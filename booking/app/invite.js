@@ -6,7 +6,23 @@
 (function () {
   'use strict';
 
-  var token = decodeURIComponent(window.location.pathname.replace(/^\/i\//, '')).replace(/\/+$/, '');
+  /** Where the API lives: the Worker URL from app/config.js, or this origin. */
+  function apiBase() {
+    var cfg = window.ABY_CONFIG || {};
+    return String(cfg.api || '').trim().replace(/[/]+$/, '');
+  }
+
+  /* The link may arrive as ?t=TOKEN, #TOKEN, or /i/TOKEN — accept all three. */
+  function readToken() {
+    var q = new URLSearchParams(window.location.search).get('t');
+    if (q) return q.trim();
+    var hash = window.location.hash.replace(/^#/, '').trim();
+    if (hash) return decodeURIComponent(hash);
+    var m = window.location.pathname.match(/[/]i[/]([^/]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  var token = readToken();
   var slot = null;
   var choice = null; // true = attending, false = not
 
@@ -186,7 +202,7 @@
     btn.disabled = true;
     btn.textContent = 'Ipinapadala…';
 
-    fetch('/api/invite/' + encodeURIComponent(token), {
+    fetch(apiBase() + '/api/invite/' + encodeURIComponent(token), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -218,7 +234,7 @@
     return;
   }
 
-  fetch('/api/invite/' + encodeURIComponent(token))
+  fetch(apiBase() + '/api/invite/' + encodeURIComponent(token))
     .then(function (res) {
       if (!res.ok) throw new Error('not found');
       return res.json();

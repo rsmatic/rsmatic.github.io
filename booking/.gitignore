@@ -1,3 +1,10 @@
 node_modules/
+.wrangler/
 *.tmp
-data/*.bak
+
+# Ang lokal na database — hindi dapat mapunta sa GitHub Pages,
+# nandoon kasi ang pangalan ng bisita at ang kanilang mga token.
+server/data/
+
+# Lokal na secrets para sa wrangler dev
+worker/.dev.vars
