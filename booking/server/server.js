@@ -58,7 +58,7 @@ function readBody(req) {
       raw += chunk;
       if (raw.length > 1000000) {
         req.destroy();
-        reject(new HttpError(413, 'Masyadong malaki ang request.'));
+        reject(new HttpError(413, 'Request too large.'));
       }
     });
     req.on('end', () => {
@@ -66,7 +66,7 @@ function readBody(req) {
       try {
         resolve(JSON.parse(raw));
       } catch {
-        reject(new HttpError(400, 'Hindi mabasa ang JSON body.'));
+        reject(new HttpError(400, 'Could not read the JSON body.'));
       }
     });
     req.on('error', reject);
@@ -99,7 +99,7 @@ const server = http.createServer(async (req, res) => {
     const rel = resolveStatic(pathname);
     if (!rel) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      return res.end('404 - Wala ang hinahanap mong page.');
+      return res.end('404 - Page not found.');
     }
     const file = path.join(SITE_DIR, rel);
     const data = await fsp.readFile(file);
@@ -112,12 +112,12 @@ const server = http.createServer(async (req, res) => {
   } catch (err) {
     const status = err instanceof HttpError ? err.status : 500;
     if (status === 500) console.error(err);
-    return sendJson(res, status, { error: err.message || 'May nangyaring mali sa server.' });
+    return sendJson(res, status, { error: err.message || 'Something went wrong on the server.' });
   }
 });
 
 server.listen(PORT, () => {
-  const note = process.env.ADMIN_KEY ? '' : '   (default - palitan gamit ang ADMIN_KEY env var)';
+  const note = process.env.ADMIN_KEY ? '' : '   (default - override with the ADMIN_KEY env var)';
   console.log('');
   console.log('  Aby 41st - Booking System (local)');
   console.log('  ---------------------------------');

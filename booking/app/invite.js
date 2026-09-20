@@ -28,9 +28,9 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
-  var MONTHS = ['Enero', 'Pebrero', 'Marso', 'Abril', 'Mayo', 'Hunyo', 'Hulyo',
-    'Agosto', 'Setyembre', 'Oktubre', 'Nobyembre', 'Disyembre'];
-  var DAYS = ['Linggo', 'Lunes', 'Martes', 'Miyerkules', 'Huwebes', 'Biyernes', 'Sabado'];
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'];
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   function parseDate(iso) {
     if (!iso) return null;
@@ -99,7 +99,7 @@
     var ev = slot.event;
     var age = ageAt(ev.birthDate, ev.eventDate);
 
-    $('c-eyebrow').textContent = 'Ikaw ay inaanyayahan sa';
+    $('c-eyebrow').textContent = 'You are invited to';
     if (age !== null) {
       $('c-age').textContent = age;
       $('c-age').classList.remove('hidden');
@@ -110,15 +110,15 @@
       : escapeHtml(ev.title);
 
     var facts = [];
-    if (ev.eventDate) facts.push(['Petsa', formatDate(ev.eventDate)]);
-    if (ev.startTime) facts.push(['Oras', escapeHtml(formatTime(ev.startTime))]);
+    if (ev.eventDate) facts.push(['Date', formatDate(ev.eventDate)]);
+    if (ev.startTime) facts.push(['Time', escapeHtml(formatTime(ev.startTime))]);
     if (ev.venue) facts.push(['Venue', escapeHtml(ev.venue)]);
     if (ev.dressCode) facts.push(['Dress code', escapeHtml(ev.dressCode)]);
     $('c-facts').innerHTML = facts.map(function (f) {
       return '<div><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>';
     }).join('');
 
-    $('c-guest').textContent = slot.guestName || 'Bisita';
+    $('c-guest').textContent = slot.guestName || 'Guest';
     $('c-seat').textContent = slot.label;
 
     if (ev.note) {
@@ -126,8 +126,8 @@
       $('c-note').classList.remove('hidden');
     }
 
-    $('footer').textContent = ev.hostName ? 'Inihahandog ni ' + ev.hostName : '';
-    document.title = 'Imbitasyon — ' + (ev.title || 'Birthday');
+    $('footer').textContent = ev.hostName ? 'Hosted by ' + ev.hostName : '';
+    document.title = 'Invitation — ' + (ev.title || 'Birthday');
   }
 
   function renderAsk() {
@@ -136,8 +136,8 @@
 
     var deadline = slot.event.rsvpDeadline;
     $('deadlineNote').textContent = deadline
-      ? 'Pakisagot po bago sumapit ang ' + formatShortDate(deadline) + '.'
-      : 'Pakisagot po para maihanda namin ang upuan mo.';
+      ? 'Please reply before ' + formatShortDate(deadline) + '.'
+      : 'Please reply so we can prepare your seat.';
 
     choice = slot.status === 'confirmed' ? true : (slot.status === 'declined' ? false : null);
     $('reason').value = slot.reason || '';
@@ -160,19 +160,19 @@
     var attending = slot.status === 'confirmed';
     $('r-icon').innerHTML = attending ? '&#10003;' : '&#9825;';
     $('r-icon').style.color = attending ? 'var(--ok)' : 'var(--no)';
-    $('r-title').textContent = attending ? 'Salamat! Naka-book na ang upuan mo.' : 'Salamat sa pagsagot.';
+    $('r-title').textContent = attending ? 'Thank you! Your seat is booked.' : 'Thank you for letting us know.';
     $('r-body').textContent = attending
-      ? 'Nakareserba na sa pangalan mo ang upuan at hindi na ito maibibigay sa iba. Kitakits sa ' +
+      ? 'The seat is held in your name and will not be given to anyone else. See you on ' +
         formatShortDate(slot.event.eventDate) + '!'
-      : 'Naitala na namin na hindi ka makakarating. Sayang, pero salamat sa pagpapaalam.';
+      : 'We have noted that you cannot come. We will miss you, but thank you for telling us.';
 
     var rows = [
-      '<div><b>Bisita:</b> ' + escapeHtml(slot.guestName || '—') + '</div>',
-      '<div><b>Upuan:</b> ' + escapeHtml(slot.label) + '</div>',
-      '<div><b>Sagot:</b> ' + (attending ? 'Makakarating' : 'Hindi makakarating') + '</div>',
+      '<div><b>Guest:</b> ' + escapeHtml(slot.guestName || '—') + '</div>',
+      '<div><b>Seat:</b> ' + escapeHtml(slot.label) + '</div>',
+      '<div><b>Answer:</b> ' + (attending ? 'Coming' : 'Not coming') + '</div>',
     ];
-    if (!attending && slot.reason) rows.push('<div><b>Dahilan:</b> ' + escapeHtml(slot.reason) + '</div>');
-    if (attending && slot.message) rows.push('<div><b>Mensahe mo:</b> ' + escapeHtml(slot.message) + '</div>');
+    if (!attending && slot.reason) rows.push('<div><b>Reason:</b> ' + escapeHtml(slot.reason) + '</div>');
+    if (attending && slot.message) rows.push('<div><b>Your message:</b> ' + escapeHtml(slot.message) + '</div>');
     $('r-recap').innerHTML = rows.join('');
   }
 
@@ -193,14 +193,14 @@
     if (choice === null) return;
     var reason = $('reason').value.trim();
     if (choice === false && !reason) {
-      toast('Pakilagay po ang dahilan.', true);
+      toast('Please give a reason.', true);
       $('reason').focus();
       return;
     }
 
     var btn = $('submitBtn');
     btn.disabled = true;
-    btn.textContent = 'Ipinapadala…';
+    btn.textContent = 'Sending…';
 
     fetch(apiBase() + '/api/invite/' + encodeURIComponent(token), {
       method: 'POST',
@@ -212,18 +212,18 @@
       }),
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
-        if (!res.ok) throw new Error(data.error || 'Hindi naipadala ang sagot.');
+        if (!res.ok) throw new Error(data.error || 'Your answer could not be sent.');
         return data;
       });
     }).then(function (data) {
       slot = data;
       renderSlot();
-      toast('Naipadala na ang sagot mo.');
+      toast('Your answer has been sent.');
     }).catch(function (err) {
       toast(err.message, true);
     }).then(function () {
       btn.disabled = false;
-      btn.textContent = 'Ipadala ang sagot';
+      btn.textContent = 'Send my answer';
     });
   });
 
@@ -236,9 +236,9 @@
   }
 
   if (!apiConfigured()) {
-    $('invalid').querySelector('h2').textContent = 'Hindi pa handa ang page na ito';
+    $('invalid').querySelector('h2').textContent = 'This page is not ready yet';
     $('invalid').querySelector('p').textContent =
-      'May teknikal na aberya sa imbitasyon. Pakisabi po sa nag-imbita sa inyo.';
+      'There is a technical problem with this invitation. Please tell whoever invited you.';
     show('invalid');
     return;
   }

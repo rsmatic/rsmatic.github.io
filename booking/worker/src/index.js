@@ -50,14 +50,14 @@ export default {
     }
 
     if (!pathname.startsWith('/api/')) {
-      return json({ error: 'Walang ganitong endpoint.' }, 404, cors);
+      return json({ error: 'No such endpoint.' }, 404, cors);
     }
 
     if (!env.DB) {
-      return json({ error: 'Walang naka-bind na D1 database (DB).' }, 500, cors);
+      return json({ error: 'No D1 database bound (DB).' }, 500, cors);
     }
     if (!env.ADMIN_KEY) {
-      return json({ error: 'Walang naka-set na ADMIN_KEY secret sa Worker.' }, 500, cors);
+      return json({ error: 'No ADMIN_KEY secret set on the Worker.' }, 500, cors);
     }
 
     let body = {};
@@ -67,7 +67,7 @@ export default {
         try {
           body = JSON.parse(raw);
         } catch {
-          return json({ error: 'Hindi mabasa ang JSON body.' }, 400, cors);
+          return json({ error: 'Could not read the JSON body.' }, 400, cors);
         }
       }
     }
@@ -85,7 +85,7 @@ export default {
     } catch (err) {
       const status = err instanceof HttpError ? err.status : 500;
       if (status === 500) console.error(err);
-      return json({ error: err.message || 'May nangyaring mali sa server.' }, status, cors);
+      return json({ error: err.message || 'Something went wrong on the server.' }, status, cors);
     }
   },
 };

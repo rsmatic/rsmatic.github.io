@@ -75,7 +75,7 @@ function publicSlotView(slot, event) {
  */
 export function createApi({ store, adminKey }) {
   function requireAdmin(key) {
-    if (!adminKey || key !== adminKey) throw new HttpError(401, 'Maling admin key.');
+    if (!adminKey || key !== adminKey) throw new HttpError(401, 'Wrong admin key.');
   }
 
   return async function handle({ method, segments, body = {}, adminKey: givenKey = '' }) {
@@ -91,12 +91,12 @@ export function createApi({ store, adminKey }) {
     /* ---- guest-facing, no key needed ----------------------------------- */
     if (resource === 'invite') {
       const token = rest[0];
-      if (!token) throw new HttpError(404, 'Walang token.');
+      if (!token) throw new HttpError(404, 'Missing token.');
 
       const slot = await store.getSlotByToken(token);
-      if (!slot) throw new HttpError(404, 'Hindi valid ang imbitasyon na ito.');
+      if (!slot) throw new HttpError(404, 'This invitation is not valid.');
       const event = await store.getEvent(slot.eventId);
-      if (!event) throw new HttpError(404, 'Wala na ang event na ito.');
+      if (!event) throw new HttpError(404, 'This event no longer exists.');
 
       if (method === 'GET') {
         return { status: 200, data: publicSlotView(slot, event) };
@@ -104,11 +104,11 @@ export function createApi({ store, adminKey }) {
 
       if (method === 'POST') {
         if (typeof body.attending !== 'boolean') {
-          throw new HttpError(400, 'Kailangan pumili ng sagot.');
+          throw new HttpError(400, 'Please choose an answer.');
         }
         const reason = str(body.reason);
         if (!body.attending && !reason) {
-          throw new HttpError(400, 'Pakilagay ang dahilan kung bakit hindi makakarating.');
+          throw new HttpError(400, 'Please give a reason for not being able to come.');
         }
         // Every field is decided by the request alone, so this is a single
         // atomic write — two guests answering at once cannot clobber each other.
@@ -118,7 +118,7 @@ export function createApi({ store, adminKey }) {
           message: str(body.message).slice(0, 500) || null,
           respondedAt: new Date().toISOString(),
         });
-        if (!updated) throw new HttpError(404, 'Hindi valid ang imbitasyon na ito.');
+        if (!updated) throw new HttpError(404, 'This invitation is not valid.');
         return { status: 200, data: publicSlotView(updated, event) };
       }
 
@@ -140,8 +140,8 @@ export function createApi({ store, adminKey }) {
       }
 
       if (!eventId && method === 'POST') {
-        if (!str(body.title)) throw new HttpError(400, 'Kailangan ng pamagat ng event.');
-        if (!str(body.eventDate)) throw new HttpError(400, 'Kailangan ng petsa ng event.');
+        if (!str(body.title)) throw new HttpError(400, 'The event needs a title.');
+        if (!str(body.eventDate)) throw new HttpError(400, 'The event needs a date.');
         const event = { id: newId('evt'), createdAt: new Date().toISOString() };
         for (const field of EVENT_FIELDS) event[field] = str(body[field]);
         await store.createEvent(event);
@@ -150,7 +150,7 @@ export function createApi({ store, adminKey }) {
 
       if (eventId && rest[1] === 'slots' && method === 'POST') {
         const event = await store.getEvent(eventId);
-        if (!event) throw new HttpError(404, 'Wala ang event.');
+        if (!event) throw new HttpError(404, 'Event not found.');
 
         const table = str(body.table) || 'Table 1';
         const count = Math.min(Math.max(parseInt(body.count, 10) || 1, 1), 100);
@@ -185,7 +185,7 @@ export function createApi({ store, adminKey }) {
           if (field in body) patch[field] = str(body[field]);
         }
         const updated = await store.updateEvent(eventId, patch);
-        if (!updated) throw new HttpError(404, 'Wala ang event.');
+        if (!updated) throw new HttpError(404, 'Event not found.');
         return { status: 200, data: updated };
       }
 
@@ -199,10 +199,10 @@ export function createApi({ store, adminKey }) {
 
     if (resource === 'slots') {
       const slotId = rest[0];
-      if (!slotId) throw new HttpError(404, 'Walang slot id.');
+      if (!slotId) throw new HttpError(404, 'Missing seat id.');
 
       const slot = await store.getSlot(slotId);
-      if (!slot) throw new HttpError(404, 'Wala ang slot.');
+      if (!slot) throw new HttpError(404, 'Seat not found.');
 
       if (rest[1] === 'token' && method === 'POST') {
         return { status: 200, data: await store.updateSlot(slotId, { token: newToken() }) };
@@ -258,6 +258,6 @@ export function createApi({ store, adminKey }) {
       throw new HttpError(405, 'Method not allowed.');
     }
 
-    throw new HttpError(404, 'Walang ganitong endpoint.');
+    throw new HttpError(404, 'No such endpoint.');
   };
 }

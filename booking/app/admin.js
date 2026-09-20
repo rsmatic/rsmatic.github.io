@@ -22,9 +22,9 @@
 
   /* ------------------------------------------------------------- helpers */
 
-  var MONTHS = ['Enero', 'Pebrero', 'Marso', 'Abril', 'Mayo', 'Hunyo', 'Hulyo',
-    'Agosto', 'Setyembre', 'Oktubre', 'Nobyembre', 'Disyembre'];
-  var DAYS = ['Linggo', 'Lunes', 'Martes', 'Miyerkules', 'Huwebes', 'Biyernes', 'Sabado'];
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'];
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   function formatDate(iso) {
     if (!iso) return '';
@@ -89,8 +89,8 @@
         return data;
       });
     }, function () {
-      throw new Error('Hindi maabot ang API' + (apiBase() ? ' sa ' + apiBase() : '') +
-        '. Tingnan ang app/config.js.');
+      throw new Error('Cannot reach the API' + (apiBase() ? ' at ' + apiBase() : '') +
+        '. Check app/config.js.');
     });
   }
 
@@ -112,7 +112,7 @@
     var sample = $('baseSample');
     if (sample) sample.textContent = baseUrl() + 'i.html?t=xxxxxxxxxxxxx';
     var note = $('apiNote');
-    if (note) note.textContent = apiBase() || window.location.origin + '  (kaparehong origin)';
+    if (note) note.textContent = apiBase() || window.location.origin + '  (same origin)';
   }
 
   function copy(text) {
@@ -139,19 +139,19 @@
   function inviteMessage(slot) {
     var ev = currentEvent();
     if (!ev) return inviteLink(slot);
-    var who = slot.guestName || 'Kaibigan';
+    var who = slot.guestName || 'Friend';
     var when = formatDate(ev.eventDate) + (ev.startTime ? ', ' + formatTime(ev.startTime) : '');
     var lines = [
-      'Kumusta ' + who + '!',
+      'Hi ' + who + '!',
       '',
-      'Inaanyayahan ka namin sa ' + ev.title + (ev.celebrant ? ' ni ' + ev.celebrant : '') + '.',
-      'Petsa: ' + when,
+      'You are invited to ' + ev.title + (ev.celebrant ? ' for ' + ev.celebrant : '') + '.',
+      'Date: ' + when,
     ];
     if (ev.venue) lines.push('Venue: ' + ev.venue);
     if (ev.dressCode) lines.push('Dress code: ' + ev.dressCode);
-    lines.push('Nakalaan sa iyo: ' + slot.label);
+    lines.push('Reserved for you: ' + slot.label);
     lines.push('');
-    lines.push('Pakisagot lang po dito kung makakarating ka:');
+    lines.push('Please let us know here if you can make it:');
     lines.push(inviteLink(slot));
     return lines.join('\n');
   }
@@ -164,8 +164,8 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: key }),
     }).then(function (res) {
-      if (res.status === 401) throw new Error('Maling admin key.');
-      if (!res.ok) throw new Error('Hindi tumugon ang API (' + res.status + '). Tingnan ang app/config.js.');
+      if (res.status === 401) throw new Error('Wrong admin key.');
+      if (!res.ok) throw new Error('The API did not respond (' + res.status + '). Check app/config.js.');
       state.key = key;
       try { localStorage.setItem(KEY_STORE, key); } catch (e) { /* private mode */ }
       $('gate').classList.add('hidden');
@@ -173,8 +173,8 @@
       return load();
     }, function () {
       throw new Error(apiBase()
-        ? 'Hindi maabot ang API sa ' + apiBase() + '. Naka-deploy na ba ang Worker?'
-        : 'Walang nakatakdang API. I-set ang api sa app/config.js, o patakbuhin ang node server/server.js.');
+        ? 'Cannot reach the API at ' + apiBase() + '. Is the Worker deployed?'
+        : 'No API configured. Set api in app/config.js, or run node server/server.js.');
     });
   }
 
@@ -201,7 +201,7 @@
       state.slots = data.slots || [];
       if (!currentEvent()) state.eventId = state.events.length ? state.events[0].id : '';
       render();
-      $('syncNote').textContent = 'Huling sync ' + new Date().toLocaleTimeString();
+      $('syncNote').textContent = 'Last sync ' + new Date().toLocaleTimeString();
     }).catch(fail);
   }
 
@@ -221,7 +221,7 @@
   function renderEvents() {
     var host = $('eventList');
     if (!state.events.length) {
-      host.innerHTML = '<p class="muted small">Wala pang event. Gumawa ng bago sa ibaba.</p>';
+      host.innerHTML = '<p class="muted small">No events yet. Create one below.</p>';
       return;
     }
     host.innerHTML = state.events.map(function (ev) {
@@ -229,7 +229,7 @@
       return '<button type="button" class="event-card' + (ev.id === state.eventId ? ' active' : '') +
         '" data-event="' + escapeHtml(ev.id) + '">' +
         '<span class="name">' + escapeHtml(ev.title) + '</span>' +
-        '<span class="meta">' + escapeHtml(formatDate(ev.eventDate)) + ' &middot; ' + count + ' upuan</span>' +
+        '<span class="meta">' + escapeHtml(formatDate(ev.eventDate)) + ' &middot; ' + count + ' seats</span>' +
         '</button>';
     }).join('');
     Array.prototype.forEach.call(host.querySelectorAll('[data-event]'), function (btn) {
@@ -264,11 +264,11 @@
       return slots.filter(function (s) { return s.status === status; }).length;
     };
     var cards = [
-      { k: 'Kabuuang upuan', n: slots.length, cls: '' },
+      { k: 'Total seats', n: slots.length, cls: '' },
       { k: 'Confirmed', n: by('confirmed'), cls: 'ok' },
-      { k: 'Hinihintay', n: by('invited'), cls: 'wait' },
-      { k: 'Hindi darating', n: by('declined'), cls: 'no' },
-      { k: 'Bakante', n: by('open'), cls: 'open' },
+      { k: 'Awaiting reply', n: by('invited'), cls: 'wait' },
+      { k: 'Not coming', n: by('declined'), cls: 'no' },
+      { k: 'Open', n: by('open'), cls: 'open' },
     ];
     $('stats').innerHTML = cards.map(function (c) {
       return '<div class="stat ' + c.cls + '"><div class="n">' + c.n + '</div><div class="k">' + c.k + '</div></div>';
@@ -276,7 +276,7 @@
   }
 
   var STATUS_LABEL = {
-    open: 'Bakante', invited: 'Hinihintay', confirmed: 'Confirmed', declined: 'Hindi darating',
+    open: 'Open', invited: 'Awaiting reply', confirmed: 'Confirmed', declined: 'Not coming',
   };
 
   function renderSlots() {
@@ -293,7 +293,7 @@
 
     if (!slots.length) {
       host.innerHTML = all.length
-        ? '<p class="muted small">Walang tugma sa filter na ito.</p>'
+        ? '<p class="muted small">Nothing matches this filter.</p>'
         : '';
       return;
     }
@@ -301,25 +301,25 @@
     host.innerHTML = slots.map(function (s) {
       var note = '';
       if (s.status === 'declined') {
-        note = '<div class="note declined"><b>Dahilan:</b> ' + escapeHtml(s.reason || '—') +
-          '<br><b>Sumagot:</b> ' + escapeHtml(new Date(s.respondedAt).toLocaleString()) + '</div>';
+        note = '<div class="note declined"><b>Reason:</b> ' + escapeHtml(s.reason || '—') +
+          '<br><b>Answered:</b> ' + escapeHtml(new Date(s.respondedAt).toLocaleString()) + '</div>';
       } else if (s.status === 'confirmed') {
-        note = '<div class="note confirmed"><b>Naka-lock ang upuan.</b> Sumagot noong ' +
+        note = '<div class="note confirmed"><b>Seat locked.</b> Answered on ' +
           escapeHtml(new Date(s.respondedAt).toLocaleString()) +
-          (s.message ? '<br><b>Mensahe:</b> ' + escapeHtml(s.message) : '') + '</div>';
+          (s.message ? '<br><b>Message:</b> ' + escapeHtml(s.message) : '') + '</div>';
       }
       return '<div class="slot ' + s.status + '" data-slot="' + escapeHtml(s.id) + '">' +
         '<div class="seat">' + escapeHtml(s.seat) + '<small>' + escapeHtml(s.table) + '</small></div>' +
-        '<div><input data-field="guestName" placeholder="Pangalan ng bisita" value="' + escapeHtml(s.guestName) + '" /></div>' +
+        '<div><input data-field="guestName" placeholder="Guest name" value="' + escapeHtml(s.guestName) + '" /></div>' +
         '<div><input data-field="guestContact" placeholder="Viber / FB (optional)" value="' + escapeHtml(s.guestContact || '') + '" /></div>' +
         '<div class="actions">' +
           '<span class="badge ' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' +
-          '<button class="tiny" data-act="link" type="button" ' + (s.guestName ? '' : 'disabled') + '>Kopyahin ang link</button>' +
-          '<button class="tiny" data-act="msg" type="button" ' + (s.guestName ? '' : 'disabled') + '>Mensahe</button>' +
+          '<button class="tiny" data-act="link" type="button" ' + (s.guestName ? '' : 'disabled') + '>Copy link</button>' +
+          '<button class="tiny" data-act="msg" type="button" ' + (s.guestName ? '' : 'disabled') + '>Message</button>' +
           '<button class="tiny ghost" data-act="share" type="button" ' + (s.guestName ? '' : 'disabled') + '>Share</button>' +
-          '<button class="tiny ghost" data-act="reset" type="button" ' + (s.respondedAt ? '' : 'disabled') + '>I-reset</button>' +
-          '<button class="tiny ghost" data-act="token" type="button">Bagong link</button>' +
-          '<button class="tiny danger" data-act="del" type="button">Alisin</button>' +
+          '<button class="tiny ghost" data-act="reset" type="button" ' + (s.respondedAt ? '' : 'disabled') + '>Reset</button>' +
+          '<button class="tiny ghost" data-act="token" type="button">New link</button>' +
+          '<button class="tiny danger" data-act="del" type="button">Remove</button>' +
         '</div>' + note +
       '</div>';
     }).join('');
@@ -343,7 +343,7 @@
         body[input.getAttribute('data-field')] = input.value;
         api('/slots/' + id, { method: 'PATCH', body: body })
           .then(function () { return load(); })
-          .then(function () { toast('Na-save.'); })
+          .then(function () { toast('Saved.'); })
           .catch(fail);
       });
     });
@@ -355,24 +355,24 @@
         if (!slot) return;
 
         if (act === 'link') {
-          copy(inviteLink(slot)).then(function () { toast('Nakopya ang link.'); });
+          copy(inviteLink(slot)).then(function () { toast('Link copied.'); });
         } else if (act === 'msg') {
-          copy(inviteMessage(slot)).then(function () { toast('Nakopya ang buong mensahe — i-paste sa Messenger o Viber.'); });
+          copy(inviteMessage(slot)).then(function () { toast('Full message copied — paste it into Messenger or Viber.'); });
         } else if (act === 'share') {
           if (navigator.share) {
             navigator.share({ title: 'Imbitasyon', text: inviteMessage(slot) }).catch(function () {});
           } else {
-            copy(inviteMessage(slot)).then(function () { toast('Walang share dito — nakopya na lang ang mensahe.'); });
+            copy(inviteMessage(slot)).then(function () { toast('Sharing is not available here — the message was copied instead.'); });
           }
         } else if (act === 'reset') {
-          if (!confirm('I-reset ang sagot ni ' + (slot.guestName || 'bisita') + '? Mabubura ang confirmation.')) return;
-          api('/slots/' + id + '/reset', { method: 'POST' }).then(load).then(function () { toast('Na-reset.'); }).catch(fail);
+          if (!confirm('Reset the answer from ' + (slot.guestName || 'this guest') + '? Their confirmation will be erased.')) return;
+          api('/slots/' + id + '/reset', { method: 'POST' }).then(load).then(function () { toast('Answer reset.'); }).catch(fail);
         } else if (act === 'token') {
-          if (!confirm('Gagawa ng bagong link. Hindi na gagana ang lumang link na naipadala mo. Tuloy?')) return;
-          api('/slots/' + id + '/token', { method: 'POST' }).then(load).then(function () { toast('Bagong link na ang slot.'); }).catch(fail);
+          if (!confirm('This makes a new link. The old link you already sent will stop working. Continue?')) return;
+          api('/slots/' + id + '/token', { method: 'POST' }).then(load).then(function () { toast('The seat has a new link.'); }).catch(fail);
         } else if (act === 'del') {
-          if (!confirm('Alisin ang ' + slot.label + '?')) return;
-          api('/slots/' + id, { method: 'DELETE' }).then(load).then(function () { toast('Naalis.'); }).catch(fail);
+          if (!confirm('Remove ' + slot.label + '?')) return;
+          api('/slots/' + id, { method: 'DELETE' }).then(load).then(function () { toast('Removed.'); }).catch(fail);
         }
       });
     });
@@ -391,7 +391,7 @@
       state.eventId = ev.id;
       $('eventForm').reset();
       return load();
-    }).then(function () { toast('Nagawa na ang event.'); }).catch(fail);
+    }).then(function () { toast('Event created.'); }).catch(fail);
   });
 
   $('detailForm').addEventListener('submit', function (e) {
@@ -402,17 +402,17 @@
       body[f] = $('d-' + f).value;
     });
     api('/events/' + state.eventId, { method: 'PATCH', body: body })
-      .then(load).then(function () { toast('Na-update ang detalye.'); }).catch(fail);
+      .then(load).then(function () { toast('Details updated.'); }).catch(fail);
   });
 
   $('deleteEventBtn').addEventListener('click', function () {
     var ev = currentEvent();
     if (!ev) return;
-    if (!confirm('Burahin ang "' + ev.title + '" kasama ang lahat ng upuan at sagot? Hindi na ito maibabalik.')) return;
+    if (!confirm('Delete "' + ev.title + '" along with every seat and answer? This cannot be undone.')) return;
     api('/events/' + ev.id, { method: 'DELETE' }).then(function () {
       state.eventId = '';
       return load();
-    }).then(function () { toast('Nabura ang event.'); }).catch(fail);
+    }).then(function () { toast('Event deleted.'); }).catch(fail);
   });
 
   $('slotForm').addEventListener('submit', function (e) {
@@ -426,7 +426,7 @@
       .then(function (res) {
         var made = (res.created || []).length;
         $('s-startAt').value = String(Number(body.startAt || 1) + made);
-        return load().then(function () { toast('Nadagdag ang ' + made + ' upuan.'); });
+        return load().then(function () { toast('Added ' + made + ' seats.'); });
       }).catch(fail);
   });
 
@@ -467,7 +467,7 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-      toast('Na-download ang JSON backup.');
+      toast('JSON backup downloaded.');
     }).catch(fail);
   });
 
@@ -490,8 +490,8 @@
 
   if (!apiConfigured()) {
     var gateErr = $('gateError');
-    gateErr.innerHTML = 'Wala pang nakatakdang API.<br>I-set ang <b>api</b> sa <code>app/config.js</code> ' +
-      'sa URL ng Cloudflare Worker, tapos i-commit at i-push.';
+    gateErr.innerHTML = 'No API configured yet.<br>Set <b>api</b> in <code>app/config.js</code> to the ' +
+      'Cloudflare Worker URL, then commit and push.';
     gateErr.classList.remove('hidden');
     $('gateKey').disabled = true;
     $('gateForm').querySelector('button').disabled = true;

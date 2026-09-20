@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="tl">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Imbitasyon</title>
-<meta property="og:title" content="May imbitasyon para sa iyo" />
-<meta property="og:description" content="Pakisagot lang kung makakarating ka." />
+<title>Invitation</title>
+<meta property="og:title" content="You have an invitation" />
+<meta property="og:description" content="Please let us know if you can come." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -107,16 +107,16 @@
 <body>
 <div class="wrap">
 
-  <div id="loading" class="state"><p>Binubuksan ang imbitasyon…</p></div>
+  <div id="loading" class="state"><p>Opening your invitation…</p></div>
 
   <div id="invalid" class="state hidden">
-    <h2>Hindi mahanap ang imbitasyon</h2>
-    <p>Maaaring mali ang link o pinalitan na ito. Pakihingi po ulit sa nag-imbita sa inyo.</p>
+    <h2>Invitation not found</h2>
+    <p>The link may be wrong, or it may have been replaced. Please ask whoever invited you for a new one.</p>
   </div>
 
   <div id="card" class="card hidden">
     <div class="crest">
-      <div class="eyebrow" id="c-eyebrow">Imbitasyon</div>
+      <div class="eyebrow" id="c-eyebrow">Invitation</div>
       <div class="age hidden" id="c-age"></div>
       <div class="name" id="c-name"></div>
       <div class="rule"></div>
@@ -134,25 +134,25 @@
 
     <!-- ask -->
     <div class="ask hidden" id="askBox">
-      <h2>Makakarating ka ba?</h2>
+      <h2>Can you make it?</h2>
       <p id="deadlineNote"></p>
 
       <div class="choices">
-        <button type="button" class="choice yes" id="choiceYes"><span class="mark">&#10003;</span>Oo, makakarating ako</button>
-        <button type="button" class="choice no" id="choiceNo"><span class="mark">&#10005;</span>Pasensya na, hindi ako makakarating</button>
+        <button type="button" class="choice yes" id="choiceYes"><span class="mark">&#10003;</span>Yes, I can come</button>
+        <button type="button" class="choice no" id="choiceNo"><span class="mark">&#10005;</span>Sorry, I cannot come</button>
       </div>
 
       <div id="reasonBox" class="hidden">
-        <label for="reason">Dahilan *</label>
-        <textarea id="reason" placeholder="Halimbawa: May trabaho po ako sa araw na iyon."></textarea>
+        <label for="reason">Reason *</label>
+        <textarea id="reason" placeholder="For example: I have work that day."></textarea>
       </div>
 
       <div id="messageBox" class="hidden">
-        <label for="message">Maikling mensahe para sa celebrant (optional)</label>
+        <label for="message">A short message for the celebrant (optional)</label>
         <textarea id="message" placeholder="Happy birthday!"></textarea>
       </div>
 
-      <button class="primary" id="submitBtn" type="button" disabled>Ipadala ang sagot</button>
+      <button class="primary" id="submitBtn" type="button" disabled>Send my answer</button>
     </div>
 
     <!-- result -->
@@ -161,7 +161,7 @@
       <h2 id="r-title"></h2>
       <p id="r-body"></p>
       <div class="recap" id="r-recap"></div>
-      <button class="ghost" id="changeBtn" type="button">Baguhin ang sagot</button>
+      <button class="ghost" id="changeBtn" type="button">Change my answer</button>
     </div>
   </div>
 

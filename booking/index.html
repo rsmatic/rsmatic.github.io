@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tl">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -140,35 +140,35 @@
     <div class="row">
       <span class="tiny-text muted" id="syncNote">—</span>
       <button class="ghost tiny" id="exportBtn" type="button">Export JSON</button>
-      <button class="ghost tiny" id="refreshBtn" type="button">I-refresh</button>
+      <button class="ghost tiny" id="refreshBtn" type="button">Refresh</button>
       <button class="ghost tiny" id="lockBtn" type="button">Lock</button>
     </div>
   </header>
 
   <!-- 1. EVENTS -->
   <section class="block">
-    <h2><span class="step">1</span> Mga Event</h2>
-    <p class="hint">Piliin ang event na paglalagyan ng mga upuan, o gumawa ng bago.</p>
+    <h2><span class="step">1</span> Events</h2>
+    <p class="hint">Pick the event you are seating, or create a new one.</p>
     <div id="eventList"></div>
 
     <details class="collapse" style="margin-top:12px">
-      <summary>Gumawa ng bagong event</summary>
+      <summary>Create a new event</summary>
       <div class="body">
         <form id="eventForm">
           <div class="grid-2">
-            <div class="field"><label for="ev-title">Pamagat ng event *</label><input id="ev-title" required placeholder="Aby's 41st Birthday" /></div>
+            <div class="field"><label for="ev-title">Event title *</label><input id="ev-title" required placeholder="Aby's 41st Birthday" /></div>
             <div class="field"><label for="ev-celebrant">Celebrant</label><input id="ev-celebrant" placeholder="Mary Abegail Matic" /></div>
-            <div class="field"><label for="ev-nickname">Palayaw</label><input id="ev-nickname" placeholder="Aby" /></div>
-            <div class="field"><label for="ev-birthDate">Kaarawan</label><input id="ev-birthDate" type="date" /></div>
-            <div class="field"><label for="ev-eventDate">Petsa ng event *</label><input id="ev-eventDate" type="date" required /></div>
-            <div class="field"><label for="ev-startTime">Oras</label><input id="ev-startTime" type="time" /></div>
-            <div class="field"><label for="ev-venue">Venue</label><input id="ev-venue" placeholder="Pangalan at address ng lugar" /></div>
+            <div class="field"><label for="ev-nickname">Nickname</label><input id="ev-nickname" placeholder="Aby" /></div>
+            <div class="field"><label for="ev-birthDate">Birthday</label><input id="ev-birthDate" type="date" /></div>
+            <div class="field"><label for="ev-eventDate">Event date *</label><input id="ev-eventDate" type="date" required /></div>
+            <div class="field"><label for="ev-startTime">Time</label><input id="ev-startTime" type="time" /></div>
+            <div class="field"><label for="ev-venue">Venue</label><input id="ev-venue" placeholder="Name and address of the place" /></div>
             <div class="field"><label for="ev-dressCode">Dress code</label><input id="ev-dressCode" placeholder="Smart casual" /></div>
-            <div class="field"><label for="ev-rsvpDeadline">Deadline ng RSVP</label><input id="ev-rsvpDeadline" type="date" /></div>
+            <div class="field"><label for="ev-rsvpDeadline">RSVP deadline</label><input id="ev-rsvpDeadline" type="date" /></div>
             <div class="field"><label for="ev-hostName">Host</label><input id="ev-hostName" placeholder="Rexter Matic" /></div>
           </div>
-          <div class="field"><label for="ev-note">Paalala sa bisita</label><textarea id="ev-note" placeholder="Halimbawa: Mag-park po sa likod ng building."></textarea></div>
-          <div class="row" style="margin-top:14px"><button class="primary" type="submit">Gumawa ng event</button></div>
+          <div class="field"><label for="ev-note">Note for guests</label><textarea id="ev-note" placeholder="For example: parking is at the back of the building."></textarea></div>
+          <div class="row" style="margin-top:14px"><button class="primary" type="submit">Create event</button></div>
         </form>
       </div>
     </details>
@@ -178,28 +178,28 @@
 
     <!-- 2. EVENT DETAILS -->
     <section class="block">
-      <h2><span class="step">2</span> Detalye ng Event</h2>
-      <p class="hint">Ito ang makikita ng bisita sa imbitasyon nila.</p>
+      <h2><span class="step">2</span> Event Details</h2>
+      <p class="hint">This is what guests see on their invitation.</p>
       <details class="collapse">
-        <summary id="detailSummary">I-edit ang detalye</summary>
+        <summary id="detailSummary">Edit details</summary>
         <div class="body">
           <form id="detailForm">
             <div class="grid-2">
-              <div class="field"><label for="d-title">Pamagat *</label><input id="d-title" required /></div>
+              <div class="field"><label for="d-title">Title *</label><input id="d-title" required /></div>
               <div class="field"><label for="d-celebrant">Celebrant</label><input id="d-celebrant" /></div>
-              <div class="field"><label for="d-nickname">Palayaw</label><input id="d-nickname" /></div>
-              <div class="field"><label for="d-birthDate">Kaarawan</label><input id="d-birthDate" type="date" /></div>
-              <div class="field"><label for="d-eventDate">Petsa ng event *</label><input id="d-eventDate" type="date" required /></div>
-              <div class="field"><label for="d-startTime">Oras</label><input id="d-startTime" type="time" /></div>
+              <div class="field"><label for="d-nickname">Nickname</label><input id="d-nickname" /></div>
+              <div class="field"><label for="d-birthDate">Birthday</label><input id="d-birthDate" type="date" /></div>
+              <div class="field"><label for="d-eventDate">Event date *</label><input id="d-eventDate" type="date" required /></div>
+              <div class="field"><label for="d-startTime">Time</label><input id="d-startTime" type="time" /></div>
               <div class="field"><label for="d-venue">Venue</label><input id="d-venue" /></div>
               <div class="field"><label for="d-dressCode">Dress code</label><input id="d-dressCode" /></div>
-              <div class="field"><label for="d-rsvpDeadline">Deadline ng RSVP</label><input id="d-rsvpDeadline" type="date" /></div>
+              <div class="field"><label for="d-rsvpDeadline">RSVP deadline</label><input id="d-rsvpDeadline" type="date" /></div>
               <div class="field"><label for="d-hostName">Host</label><input id="d-hostName" /></div>
             </div>
-            <div class="field"><label for="d-note">Paalala sa bisita</label><textarea id="d-note"></textarea></div>
+            <div class="field"><label for="d-note">Note for guests</label><textarea id="d-note"></textarea></div>
             <div class="row" style="margin-top:14px">
-              <button class="primary" type="submit">I-save</button>
-              <button class="danger" type="button" id="deleteEventBtn">Burahin ang event</button>
+              <button class="primary" type="submit">Save</button>
+              <button class="danger" type="button" id="deleteEventBtn">Delete event</button>
             </div>
           </form>
         </div>
@@ -208,30 +208,30 @@
 
     <!-- 3. SLOTS -->
     <section class="block">
-      <h2><span class="step">3</span> Gumawa ng Slots</h2>
-      <p class="hint">Isang slot = isang upuan. Gumawa ng isang mesa nang sabay-sabay.</p>
+      <h2><span class="step">3</span> Create Slots</h2>
+      <p class="hint">One slot = one seat. Create a whole table at a time.</p>
       <div class="panel">
         <form id="slotForm">
           <div class="grid-3">
-            <div class="field"><label for="s-table">Pangalan ng mesa</label><input id="s-table" value="Table 1" /></div>
-            <div class="field"><label for="s-count">Ilang upuan</label><input id="s-count" type="number" min="1" max="100" value="10" /></div>
-            <div class="field"><label for="s-startAt">Simula sa seat #</label><input id="s-startAt" type="number" min="1" value="1" /></div>
+            <div class="field"><label for="s-table">Table name</label><input id="s-table" value="Table 1" /></div>
+            <div class="field"><label for="s-count">How many seats</label><input id="s-count" type="number" min="1" max="100" value="10" /></div>
+            <div class="field"><label for="s-startAt">Start at seat #</label><input id="s-startAt" type="number" min="1" value="1" /></div>
           </div>
-          <div class="row" style="margin-top:14px"><button class="primary" type="submit">Idagdag ang mga upuan</button></div>
+          <div class="row" style="margin-top:14px"><button class="primary" type="submit">Add seats</button></div>
         </form>
       </div>
     </section>
 
     <!-- 4. LINK BASE -->
     <section class="block">
-      <h2><span class="step">4</span> Link na Ipapadala</h2>
-      <p class="hint">Awtomatikong kinukuha ito sa address ng page na ito, kaya karaniwang hindi mo na kailangang galawin. Palitan lang kung may sarili kang domain.</p>
+      <h2><span class="step">4</span> Link to Send</h2>
+      <p class="hint">This is taken from this page's own address, so you normally do not need to touch it. Change it only if you have your own domain.</p>
       <div class="panel">
         <div class="field">
-          <label for="baseUrl">Base URL ng imbitasyon</label>
+          <label for="baseUrl">Invitation base URL</label>
           <input id="baseUrl" placeholder="https://rsmatic.github.io/booking/" />
         </div>
-        <p class="tiny-text muted" style="margin:8px 0 0">Ganito ang magiging link: <span id="baseSample" style="color:var(--gold)"></span></p>
+        <p class="tiny-text muted" style="margin:8px 0 0">Links will look like this: <span id="baseSample" style="color:var(--gold)"></span></p>
         <p class="tiny-text muted" style="margin:6px 0 0">API: <span id="apiNote" style="color:var(--gold)"></span></p>
       </div>
     </section>
@@ -239,21 +239,21 @@
     <!-- 5. BOARD -->
     <section class="block">
       <h2><span class="step">5</span> Seat Board</h2>
-      <p class="hint">Ilagay ang pangalan ng bisita sa upuan, kopyahin ang link, at ipadala sa Messenger o Viber. Kapag nag-confirm sila, awtomatikong nagla-lock ang upuan.</p>
+      <p class="hint">Put a guest's name on a seat, copy the link, and send it over Messenger or Viber. When they confirm, the seat locks itself.</p>
 
       <div id="stats" style="margin-bottom:16px"></div>
 
       <div class="toolbar">
-        <button class="chip active" data-filter="all" type="button">Lahat</button>
-        <button class="chip" data-filter="open" type="button">Bakante</button>
-        <button class="chip" data-filter="invited" type="button">Hinihintay</button>
+        <button class="chip active" data-filter="all" type="button">All</button>
+        <button class="chip" data-filter="open" type="button">Open</button>
+        <button class="chip" data-filter="invited" type="button">Awaiting reply</button>
         <button class="chip" data-filter="confirmed" type="button">Confirmed</button>
-        <button class="chip" data-filter="declined" type="button">Hindi makakarating</button>
-        <input type="search" id="search" placeholder="Hanapin ang pangalan o upuan…" />
+        <button class="chip" data-filter="declined" type="button">Not coming</button>
+        <input type="search" id="search" placeholder="Search a name or seat…" />
       </div>
 
       <div id="slotList"></div>
-      <p id="emptySlots" class="muted small hidden">Wala pang upuan. Gumawa muna sa Hakbang 3.</p>
+      <p id="emptySlots" class="muted small hidden">No seats yet. Create some in Step 3.</p>
     </section>
   </div>
 </div>
