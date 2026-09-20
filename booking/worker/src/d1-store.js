@@ -137,5 +137,11 @@ export function createD1Store(d1) {
     async deleteSlot(id) {
       await d1.prepare('DELETE FROM slots WHERE id = ?').bind(id).run();
     },
+
+    /** Clears an event's seating without touching the event itself. */
+    async deleteSlotsByEvent(eventId) {
+      const res = await d1.prepare('DELETE FROM slots WHERE eventId = ?').bind(eventId).run();
+      return (res.meta && res.meta.changes) || 0;
+    },
   };
 }

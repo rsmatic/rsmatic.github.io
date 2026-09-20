@@ -121,6 +121,24 @@ async function main() {
   ok('30 simultaneous answers, none lost', stress.length === 30 && confirmed === 15 && declined === 15,
     stress.length + ' slots / ' + confirmed + ' confirmed / ' + declined + ' declined');
 
+  console.log('\n== delete all seats ==');
+  r = await call('/api/events/' + eventId + '/slots', { method: 'POST', body: { table: 'Wipe', count: 4 } });
+  const wipeToken = r.j.created[0].token;
+  await call('/api/slots/' + r.j.created[0].id, { method: 'PATCH', body: { guestName: 'Someone' } });
+  await call('/api/invite/' + wipeToken, { admin: false, method: 'POST', body: { attending: true } });
+  const beforeWipe = (await call('/api/events')).j.slots.filter((s) => s.eventId === eventId).length;
+  r = await call('/api/events/' + eventId + '/slots', { method: 'DELETE' });
+  ok('reports how many it removed', r.status === 200 && r.j.removed === beforeWipe, JSON.stringify(r.j));
+  r = await call('/api/events');
+  ok('no seats left for the event', !r.j.slots.some((s) => s.eventId === eventId));
+  ok('the event itself survives', r.j.events.some((e) => e.id === eventId));
+  ok('links from deleted seats stop working',
+    (await call('/api/invite/' + wipeToken, { admin: false })).status === 404);
+  ok('deleting seats of an unknown event -> 404',
+    (await call('/api/events/evt_nope/slots', { method: 'DELETE' })).status === 404);
+  ok('clearing an already empty event is harmless',
+    (await call('/api/events/' + eventId + '/slots', { method: 'DELETE' })).j.removed === 0);
+
   console.log('\n== export ==');
   r = await call('/api/export');
   ok('export returns events + slots', Array.isArray(r.j.events) && Array.isArray(r.j.slots));

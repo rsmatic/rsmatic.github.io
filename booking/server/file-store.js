@@ -125,4 +125,13 @@ export const fileStore = {
       data.slots = data.slots.filter((s) => s.id !== id);
     });
   },
+
+  /** Clears an event's seating without touching the event itself. */
+  async deleteSlotsByEvent(eventId) {
+    return transaction((data) => {
+      const before = data.slots.length;
+      data.slots = data.slots.filter((s) => s.eventId !== eventId);
+      return before - data.slots.length;
+    });
+  },
 };

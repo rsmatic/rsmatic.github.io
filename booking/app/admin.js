@@ -290,6 +290,7 @@
     });
 
     $('emptySlots').classList.toggle('hidden', all.length > 0);
+    $('deleteAllSlotsBtn').classList.toggle('hidden', all.length === 0);
 
     if (!slots.length) {
       host.innerHTML = all.length
@@ -413,6 +414,39 @@
       state.eventId = '';
       return load();
     }).then(function () { toast('Event deleted.'); }).catch(fail);
+  });
+
+  /* Clears the whole seating plan but keeps the event. Every link already sent
+     dies with the seats, so say so plainly before doing it. */
+  $('deleteAllSlotsBtn').addEventListener('click', function () {
+    var ev = currentEvent();
+    if (!ev) return;
+    var slots = eventSlots();
+    if (!slots.length) return;
+
+    var answered = slots.filter(function (s) { return s.respondedAt; }).length;
+    var confirmed = slots.filter(function (s) { return s.status === 'confirmed'; }).length;
+
+    var warning = 'Delete all ' + slots.length + ' seats from "' + ev.title + '"?\n\n';
+    if (answered) {
+      warning += confirmed + ' guest(s) already confirmed and ' + (answered - confirmed) +
+        ' declined. Their answers will be erased.\n\n';
+    }
+    warning += 'Every invitation link you have already sent will stop working.\n' +
+      'This cannot be undone.';
+    if (!confirm(warning)) return;
+
+    if (answered && !confirm('Last check: ' + answered + ' guest(s) have already replied. Still delete?')) {
+      return;
+    }
+
+    api('/events/' + ev.id + '/slots', { method: 'DELETE' })
+      .then(function (res) {
+        return load().then(function () {
+          toast('Deleted ' + res.removed + ' seats.');
+        });
+      })
+      .catch(fail);
   });
 
   $('slotForm').addEventListener('submit', function (e) {

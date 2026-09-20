@@ -189,7 +189,7 @@ booking/
 │   ├── server.js         Lokal na server (static + API)
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
-└── test/e2e.js           35 checks
+└── test/e2e.js           41 checks
 ```
 
 Iisa ang `api/core.js` para sa dalawang backend, kaya hindi sila magkakaiba ng ugali —
@@ -209,6 +209,7 @@ Kailangan ng header na `x-admin-key` ang mga admin endpoint. Ang guest endpoint 
 | `PATCH` | `/api/events/:id` | I-update ang event |
 | `DELETE` | `/api/events/:id` | Burahin ang event at mga slot nito |
 | `POST` | `/api/events/:id/slots` | Gumawa ng slots — `{ table, count, startAt }` |
+| `DELETE` | `/api/events/:id/slots` | Burahin ang LAHAT ng upuan ng event (mananatili ang event) |
 | `PATCH` | `/api/slots/:id` | Pangalan, contact, mesa, upuan |
 | `POST` | `/api/slots/:id/token` | Bagong link (pinapatay ang luma) |
 | `POST` | `/api/slots/:id/reset` | Burahin ang sagot ng bisita |

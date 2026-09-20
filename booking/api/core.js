@@ -179,6 +179,13 @@ export function createApi({ store, adminKey }) {
         return { status: 201, data: { created: made } };
       }
 
+      if (eventId && rest[1] === 'slots' && method === 'DELETE') {
+        const event = await store.getEvent(eventId);
+        if (!event) throw new HttpError(404, 'Event not found.');
+        const removed = await store.deleteSlotsByEvent(eventId);
+        return { status: 200, data: { ok: true, removed } };
+      }
+
       if (eventId && !rest[1] && method === 'PATCH') {
         const patch = {};
         for (const field of EVENT_FIELDS) {
