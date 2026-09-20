@@ -18,7 +18,9 @@ function corsHeaders(request, env) {
   const value = allowed.includes('*') ? (origin || '*')
     : (allowed.includes(origin) ? origin : '');
   const headers = {
-    'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+    // Every method the pages use. A missing one is invisible to curl and
+    // fatal in a browser: the preflight simply refuses the request.
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, x-admin-key',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',

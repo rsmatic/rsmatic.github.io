@@ -72,8 +72,48 @@ async function checkOrdinals() {
   ok('ordinals read 41st, 22nd, 13th — not 41th', wrong.length === 0, wrong.join(', '));
 }
 
+/**
+ * A method missing from Access-Control-Allow-Methods is invisible to curl and
+ * fatal in a browser — the preflight refuses the request before it is sent.
+ * Photo upload shipped broken that way, so compare the header against the
+ * methods the pages actually use.
+ */
+async function checkCorsCoversTheApp() {
+  const { readFileSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const { dirname, join } = await import('node:path');
+  const here = dirname(fileURLToPath(import.meta.url));
+
+  const source = ['admin.js', 'invite.js']
+    .map((f) => readFileSync(join(here, '..', 'app', f), 'utf8')).join('\n');
+  const used = new Set(['GET', ...[...source.matchAll(/method:\s*'([A-Z]+)'/g)].map((m) => m[1])]);
+
+  const res = await fetch(API + '/api/events', {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'https://rsmatic.github.io',
+      'Access-Control-Request-Method': 'PUT',
+      'Access-Control-Request-Headers': 'content-type,x-admin-key',
+    },
+  });
+  const allow = res.headers.get('access-control-allow-methods');
+  if (!allow) {
+    console.log('  SKIP  same-origin server, no CORS headers to check');
+    return;
+  }
+  const missing = [...used].filter((m) => allow.indexOf(m) < 0);
+  ok('CORS allows every method the pages use', missing.length === 0,
+    'missing ' + missing.join(', ') + ' from "' + allow + '"');
+}
+
 async function main() {
   console.log('Testing ' + API + '\n');
+
+  console.log('== browser access ==');
+  await checkCorsCoversTheApp().catch((err) => {
+    failed += 1;
+    console.log('  FAIL  could not check CORS -> ' + err.message);
+  });
 
   console.log('== invitation wording ==');
   await checkOrdinals().catch((err) => {
