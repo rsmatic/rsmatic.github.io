@@ -39,6 +39,12 @@ async function writeAtomic(data) {
   await fsp.rename(tmp, DB_FILE);
 }
 
+/* Seats are stored as text, so "10" sorts before "2" unless compared
+   numerically. Matches the ORDER BY in the D1 store. */
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+const compareSlots = (a, b) =>
+  collator.compare(a.table || '', b.table || '') || collator.compare(a.seat || '', b.seat || '');
+
 let queue = Promise.resolve();
 
 /** Run fn(data) exclusively, then persist whatever it mutated. */
@@ -58,7 +64,7 @@ export const DB_PATH = DB_FILE;
 export const fileStore = {
   async snapshot() {
     const data = await readFile();
-    return { events: data.events, slots: data.slots };
+    return { events: data.events, slots: [...data.slots].sort(compareSlots) };
   },
 
   async getEvent(id) {

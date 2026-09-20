@@ -74,7 +74,8 @@ export function createD1Store(d1) {
     async snapshot() {
       const [events, slots] = await Promise.all([
         d1.prepare('SELECT * FROM events ORDER BY createdAt').all(),
-        d1.prepare('SELECT * FROM slots ORDER BY createdAt, seat').all(),
+        // seat is TEXT, so cast before ordering or "10" lands before "2".
+        d1.prepare('SELECT * FROM slots ORDER BY tableName, CAST(seat AS INTEGER), seat').all(),
       ]);
       return {
         events: (events.results || []).map(eventFromRow),

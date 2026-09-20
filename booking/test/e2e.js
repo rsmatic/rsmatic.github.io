@@ -107,6 +107,12 @@ async function main() {
   r = await call('/api/slots/' + a.id, { method: 'PATCH', body: { guestName: 'Juan Dela Cruz', guestContact: '09171234567' } });
   ok('assigning a name flips open -> invited', r.j.status === 'invited', r.j.status);
 
+  console.log('\n== seat order ==');
+  await call('/api/events/' + eventId + '/slots', { method: 'POST', body: { table: 'Order', count: 12 } });
+  r = await call('/api/events');
+  const seatOrder = r.j.slots.filter((s) => s.table === 'Order').map((s) => s.seat).join(',');
+  ok('seats come back 1..12, not 1,10,11,12,2', seatOrder === '1,2,3,4,5,6,7,8,9,10,11,12', seatOrder);
+
   console.log('\n== guest opens the link ==');
   r = await call('/api/invite/' + a.token, { admin: false });
   ok('invite loads without any admin key', r.status === 200);

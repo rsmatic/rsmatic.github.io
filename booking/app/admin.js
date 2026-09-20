@@ -291,8 +291,20 @@
     $('detailSummary').textContent = ev.title + ' — ' + formatDate(ev.eventDate);
   }
 
+  /* Seats are stored as text, so "10" sorts before "2" unless we compare them
+     the way a person reads them. Numeric collation also keeps "Table 10"
+     after "Table 9". */
+  var collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+  function compareSlots(a, b) {
+    return collator.compare(a.table || '', b.table || '') ||
+      collator.compare(a.seat || '', b.seat || '');
+  }
+
   function eventSlots() {
-    return state.slots.filter(function (s) { return s.eventId === state.eventId; });
+    return state.slots
+      .filter(function (s) { return s.eventId === state.eventId; })
+      .sort(compareSlots);
   }
 
   function renderStats() {
