@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Admin — Aby's 41st Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23170e14'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='%23e7c27d' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .shell { max-width: 1120px; margin: 0 auto; padding: 28px 16px 80px; }
+
+  header.top {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
+    border-bottom: 1px solid var(--line-soft); padding-bottom: 18px;
+  }
+  header.top h1 { font-size: 30px; line-height: 1.15; }
+  header.top h1 span { color: var(--gold); }
+
+  section.block { margin-bottom: 22px; }
+  section.block > h2 {
+    font-size: 21px; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  section.block > .hint { color: var(--dim); font-size: 13px; margin-bottom: 14px; }
+  .step {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(231,194,125,0.14); color: var(--gold);
+    font-family: var(--sans); font-size: 12px; font-weight: 700;
+  }
+
+  /* ---- events ---- */
+  #eventList { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .event-card {
+    text-align: left; padding: 14px 16px; border-radius: var(--radius);
+    background: var(--panel); border: 1px solid var(--line-soft); color: var(--text);
+    font-weight: 400; cursor: pointer; display: block; width: 100%;
+  }
+  .event-card:hover { background: rgba(255,255,255,0.07); }
+  .event-card.active { border-color: var(--gold); background: rgba(231,194,125,0.1); }
+  .event-card .name { font-family: var(--serif); font-size: 19px; color: var(--text); }
+  .event-card .meta { font-size: 12px; color: var(--dim); margin-top: 2px; }
+
+  /* ---- stats ---- */
+  #stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 12px; }
+  .stat { padding: 14px 16px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line-soft); }
+  .stat .n { font-family: var(--serif); font-size: 30px; line-height: 1.1; }
+  .stat .k { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-top: 2px; }
+  .stat.ok .n { color: var(--ok); }
+  .stat.no .n { color: var(--no); }
+  .stat.wait .n { color: var(--wait); }
+  .stat.open .n { color: var(--open); }
+
+  /* ---- slots ---- */
+  #slotList { display: flex; flex-direction: column; gap: 10px; }
+  .slot {
+    border: 1px solid var(--line-soft); border-radius: var(--radius);
+    background: var(--panel); padding: 14px 16px;
+    display: grid; gap: 12px;
+    grid-template-columns: 132px minmax(160px, 1fr) minmax(140px, 0.7fr) auto;
+    align-items: center;
+  }
+  .slot.confirmed { border-color: rgba(127,214,171,0.4); background: rgba(127,214,171,0.06); }
+  .slot.declined { border-color: rgba(240,138,138,0.28); background: rgba(240,138,138,0.05); }
+  .slot .seat { font-family: var(--serif); font-size: 17px; }
+  .slot .seat small { display: block; font-family: var(--sans); font-size: 11px; color: var(--faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .slot .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .slot .note {
+    grid-column: 1 / -1; font-size: 13px; padding: 10px 12px;
+    border-radius: 10px; background: rgba(0,0,0,0.25); border-left: 3px solid var(--line);
+  }
+  .slot .note b { color: var(--dim); font-weight: 600; }
+  .slot .note.declined { border-left-color: var(--no); }
+  .slot .note.confirmed { border-left-color: var(--ok); }
+  .locked-note { font-size: 12px; color: var(--ok); }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .toolbar input[type="search"] { max-width: 260px; }
+  .chip {
+    font-size: 12px; padding: 7px 13px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line-soft); background: transparent; color: var(--dim); font-weight: 600;
+  }
+  .chip.active { border-color: var(--gold); color: var(--gold); background: rgba(231,194,125,0.1); }
+
+  details.collapse { border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--panel); }
+  details.collapse > summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--gold);
+    list-style: none; font-size: 14px;
+  }
+  details.collapse > summary::-webkit-details-marker { display: none; }
+  details.collapse > summary::before { content: '+ '; }
+  details.collapse[open] > summary::before { content: '– '; }
+  details.collapse > .body { padding: 0 18px 18px; }
+
+  /* ---- gate ---- */
+  #gate {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--ink); display: grid; place-items: center; padding: 20px;
+  }
+  #gate .box { width: 100%; max-width: 360px; text-align: center; }
+  #gate h1 { font-size: 30px; margin-bottom: 4px; }
+  #gate p { color: var(--dim); font-size: 13px; margin: 0 0 20px; }
+  #gate button { width: 100%; margin-top: 12px; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 760px) {
+    .slot { grid-template-columns: 1fr; }
+    .slot .actions { justify-content: flex-start; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="box">
+    <div class="eyebrow">Booking System</div>
+    <h1>Admin Console</h1>
+    <p>Ilagay ang admin key para makapasok.</p>
+    <form id="gateForm">
+      <input id="gateKey" type="password" placeholder="Admin key" autocomplete="current-password" />
+      <button class="primary" type="submit">Pumasok</button>
+    </form>
+    <p id="gateError" class="hidden" style="color:var(--no);margin-top:14px"></p>
+  </div>
+</div>
+
+<div class="shell hidden" id="app">
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">Admin Console</div>
+      <h1>Seat Reservation &amp; <span>RSVP</span></h1>
+    </div>
+    <div class="row">
+      <span class="tiny-text muted" id="syncNote">—</span>
+      <button class="ghost tiny" id="refreshBtn" type="button">I-refresh</button>
+      <button class="ghost tiny" id="lockBtn" type="button">Lock</button>
+    </div>
+  </header>
+
+  <!-- 1. EVENTS -->
+  <section class="block">
+    <h2><span class="step">1</span> Mga Event</h2>
+    <p class="hint">Piliin ang event na paglalagyan ng mga upuan, o gumawa ng bago.</p>
+    <div id="eventList"></div>
+
+    <details class="collapse" style="margin-top:12px">
+      <summary>Gumawa ng bagong event</summary>
+      <div class="body">
+        <form id="eventForm">
+          <div class="grid-2">
+            <div class="field"><label for="ev-title">Pamagat ng event *</label><input id="ev-title" required placeholder="Aby's 41st Birthday" /></div>
+            <div class="field"><label for="ev-celebrant">Celebrant</label><input id="ev-celebrant" placeholder="Mary Abegail Matic" /></div>
+            <div class="field"><label for="ev-nickname">Palayaw</label><input id="ev-nickname" placeholder="Aby" /></div>
+            <div class="field"><label for="ev-birthDate">Kaarawan</label><input id="ev-birthDate" type="date" /></div>
+            <div class="field"><label for="ev-eventDate">Petsa ng event *</label><input id="ev-eventDate" type="date" required /></div>
+            <div class="field"><label for="ev-startTime">Oras</label><input id="ev-startTime" type="time" /></div>
+            <div class="field"><label for="ev-venue">Venue</label><input id="ev-venue" placeholder="Pangalan at address ng lugar" /></div>
+            <div class="field"><label for="ev-dressCode">Dress code</label><input id="ev-dressCode" placeholder="Smart casual" /></div>
+            <div class="field"><label for="ev-rsvpDeadline">Deadline ng RSVP</label><input id="ev-rsvpDeadline" type="date" /></div>
+            <div class="field"><label for="ev-hostName">Host</label><input id="ev-hostName" placeholder="Rexter Matic" /></div>
+          </div>
+          <div class="field"><label for="ev-note">Paalala sa bisita</label><textarea id="ev-note" placeholder="Halimbawa: Mag-park po sa likod ng building."></textarea></div>
+          <div class="row" style="margin-top:14px"><button class="primary" type="submit">Gumawa ng event</button></div>
+        </form>
+      </div>
+    </details>
+  </section>
+
+  <div id="eventScope" class="hidden">
+
+    <!-- 2. EVENT DETAILS -->
+    <section class="block">
+      <h2><span class="step">2</span> Detalye ng Event</h2>
+      <p class="hint">Ito ang makikita ng bisita sa imbitasyon nila.</p>
+      <details class="collapse">
+        <summary id="detailSummary">I-edit ang detalye</summary>
+        <div class="body">
+          <form id="detailForm">
+            <div class="grid-2">
+              <div class="field"><label for="d-title">Pamagat *</label><input id="d-title" required /></div>
+              <div class="field"><label for="d-celebrant">Celebrant</label><input id="d-celebrant" /></div>
+              <div class="field"><label for="d-nickname">Palayaw</label><input id="d-nickname" /></div>
+              <div class="field"><label for="d-birthDate">Kaarawan</label><input id="d-birthDate" type="date" /></div>
+              <div class="field"><label for="d-eventDate">Petsa ng event *</label><input id="d-eventDate" type="date" required /></div>
+              <div class="field"><label for="d-startTime">Oras</label><input id="d-startTime" type="time" /></div>
+              <div class="field"><label for="d-venue">Venue</label><input id="d-venue" /></div>
+              <div class="field"><label for="d-dressCode">Dress code</label><input id="d-dressCode" /></div>
+              <div class="field"><label for="d-rsvpDeadline">Deadline ng RSVP</label><input id="d-rsvpDeadline" type="date" /></div>
+              <div class="field"><label for="d-hostName">Host</label><input id="d-hostName" /></div>
+            </div>
+            <div class="field"><label for="d-note">Paalala sa bisita</label><textarea id="d-note"></textarea></div>
+            <div class="row" style="margin-top:14px">
+              <button class="primary" type="submit">I-save</button>
+              <button class="danger" type="button" id="deleteEventBtn">Burahin ang event</button>
+            </div>
+          </form>
+        </div>
+      </details>
+    </section>
+
+    <!-- 3. SLOTS -->
+    <section class="block">
+      <h2><span class="step">3</span> Gumawa ng Slots</h2>
+      <p class="hint">Isang slot = isang upuan. Gumawa ng isang mesa nang sabay-sabay.</p>
+      <div class="panel">
+        <form id="slotForm">
+          <div class="grid-3">
+            <div class="field"><label for="s-table">Pangalan ng mesa</label><input id="s-table" value="Table 1" /></div>
+            <div class="field"><label for="s-count">Ilang upuan</label><input id="s-count" type="number" min="1" max="100" value="10" /></div>
+            <div class="field"><label for="s-startAt">Simula sa seat #</label><input id="s-startAt" type="number" min="1" value="1" /></div>
+          </div>
+          <div class="row" style="margin-top:14px"><button class="primary" type="submit">Idagdag ang mga upuan</button></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- 4. LINK BASE -->
+    <section class="block">
+      <h2><span class="step">4</span> Link na Ipapadala</h2>
+      <p class="hint">Ito ang address na makikita ng bisita. Kung gumagamit ka ng tunnel o hosting, dito mo ilagay ang pampublikong URL.</p>
+      <div class="panel">
+        <div class="field">
+          <label for="baseUrl">Public base URL</label>
+          <input id="baseUrl" placeholder="https://aby41.example.com" />
+        </div>
+        <p class="tiny-text muted" style="margin:8px 0 0">Halimbawa ng magiging link: <span id="baseSample" style="color:var(--gold)"></span></p>
+      </div>
+    </section>
+
+    <!-- 5. BOARD -->
+    <section class="block">
+      <h2><span class="step">5</span> Seat Board</h2>
+      <p class="hint">Ilagay ang pangalan ng bisita sa upuan, kopyahin ang link, at ipadala sa Messenger o Viber. Kapag nag-confirm sila, awtomatikong nagla-lock ang upuan.</p>
+
+      <div id="stats" style="margin-bottom:16px"></div>
+
+      <div class="toolbar">
+        <button class="chip active" data-filter="all" type="button">Lahat</button>
+        <button class="chip" data-filter="open" type="button">Bakante</button>
+        <button class="chip" data-filter="invited" type="button">Hinihintay</button>
+        <button class="chip" data-filter="confirmed" type="button">Confirmed</button>
+        <button class="chip" data-filter="declined" type="button">Hindi makakarating</button>
+        <input type="search" id="search" placeholder="Hanapin ang pangalan o upuan…" />
+      </div>
+
+      <div id="slotList"></div>
+      <p id="emptySlots" class="muted small hidden">Wala pang upuan. Gumawa muna sa Hakbang 3.</p>
+    </section>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+/* ===========================================================
+   Aby's 41st — shared styling for the admin console and the
+   guest invitation page.
+   =========================================================== */
+
+:root {
+  --ink: #170e14;
+  --ink-2: #1f1420;
+  --panel: rgba(255, 255, 255, 0.045);
+  --panel-solid: #241829;
+  --line: rgba(231, 194, 125, 0.2);
+  --line-soft: rgba(255, 255, 255, 0.09);
+  --gold: #e7c27d;
+  --gold-dim: rgba(231, 194, 125, 0.55);
+  --rose: #e9a6b8;
+  --text: #f2e9ee;
+  --dim: #a8929e;
+  --faint: #6f5d68;
+  --ok: #7fd6ab;
+  --no: #f08a8a;
+  --wait: #e8c86a;
+  --open: #8ab4d8;
+  --radius: 14px;
+  --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background:
+    radial-gradient(1100px 600px at 12% -12%, rgba(231, 194, 125, 0.11), transparent 62%),
+    radial-gradient(900px 520px at 92% 8%, rgba(233, 166, 184, 0.1), transparent 60%),
+    var(--ink);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+a { color: var(--gold); }
+
+/* ------------------------------------------------------------- primitives */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 20px;
+  backdrop-filter: blur(6px);
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  font-weight: 600;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+input, textarea, select {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 11px 13px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--gold-dim);
+  box-shadow: 0 0 0 3px rgba(231, 194, 125, 0.12);
+}
+
+textarea { resize: vertical; min-height: 88px; }
+
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(231, 194, 125, 0.1);
+  color: var(--gold);
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease, opacity 0.15s ease;
+}
+
+button:hover:not(:disabled) { background: rgba(231, 194, 125, 0.2); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button.primary {
+  background: linear-gradient(135deg, var(--gold), #d9a95e);
+  color: #241829;
+  border-color: transparent;
+}
+button.primary:hover:not(:disabled) { filter: brightness(1.08); background: linear-gradient(135deg, var(--gold), #d9a95e); }
+
+button.ghost {
+  background: transparent;
+  border-color: var(--line-soft);
+  color: var(--dim);
+}
+button.ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); color: var(--text); }
+
+button.tiny {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+button.danger { color: var(--no); border-color: rgba(240, 138, 138, 0.3); background: rgba(240, 138, 138, 0.08); }
+button.danger:hover:not(:disabled) { background: rgba(240, 138, 138, 0.18); }
+
+.field + .field { margin-top: 14px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+.muted { color: var(--dim); }
+.small { font-size: 13px; }
+.tiny-text { font-size: 12px; }
+
+/* --------------------------------------------------------------- statuses */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.badge.open { color: var(--open); background: rgba(138, 180, 216, 0.12); }
+.badge.invited { color: var(--wait); background: rgba(232, 200, 106, 0.12); }
+.badge.confirmed { color: var(--ok); background: rgba(127, 214, 171, 0.14); }
+.badge.declined { color: var(--no); background: rgba(240, 138, 138, 0.12); }
+
+/* ----------------------------------------------------------------- toasts */
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translate(-50%, 24px);
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 90;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast.error { border-color: rgba(240, 138, 138, 0.5); color: var(--no); }

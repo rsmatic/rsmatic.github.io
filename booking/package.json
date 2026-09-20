@@ -1,0 +1,12 @@
+{
+  "name": "aby41-booking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Seat reservation + RSVP system for Mary Abegail 'Aby' Matic's 41st birthday",
+  "main": "server.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}

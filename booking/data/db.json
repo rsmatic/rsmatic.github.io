@@ -1,0 +1,20 @@
+{
+  "events": [
+    {
+      "id": "evt_aby41",
+      "title": "Aby's 41st Birthday",
+      "celebrant": "Mary Abegail Matic",
+      "nickname": "Aby",
+      "birthDate": "1985-10-25",
+      "eventDate": "2026-10-25",
+      "startTime": "18:00",
+      "venue": "",
+      "dressCode": "",
+      "note": "",
+      "rsvpDeadline": "2026-10-18",
+      "hostName": "Rexter Matic",
+      "createdAt": "2026-09-20T00:00:00.000Z"
+    }
+  ],
+  "slots": []
+}

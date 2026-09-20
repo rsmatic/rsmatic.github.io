@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Imbitasyon</title>
+<meta property="og:title" content="May imbitasyon para sa iyo" />
+<meta property="og:description" content="Pakisagot lang kung makakarating ka." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23170e14'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='%23e7c27d' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .wrap { max-width: 560px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+    padding: 30px 24px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::after {
+    content: '';
+    position: absolute; inset: 7px;
+    border: 1px solid rgba(231,194,125,0.14);
+    border-radius: 14px;
+    pointer-events: none;
+  }
+
+  .crest { text-align: center; margin-bottom: 20px; }
+  .crest .rule {
+    width: 54px; height: 1px; background: var(--gold-dim); margin: 12px auto;
+  }
+  .crest .age {
+    font-family: var(--serif); font-size: 62px; line-height: 1; color: var(--gold);
+  }
+  .crest .name {
+    font-family: var(--serif); font-size: 32px; line-height: 1.15; margin-top: 2px;
+  }
+  .crest .sub { color: var(--dim); font-size: 13px; }
+
+  dl.facts { margin: 22px 0 0; display: grid; gap: 1px; background: var(--line-soft); border-radius: 12px; overflow: hidden; }
+  dl.facts > div {
+    display: grid; grid-template-columns: 96px 1fr; gap: 12px;
+    background: rgba(0,0,0,0.22); padding: 12px 14px;
+  }
+  dl.facts dt { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dim); font-weight: 600; align-self: center; }
+  dl.facts dd { margin: 0; font-size: 15px; }
+
+  .seat-strip {
+    margin-top: 18px; text-align: center; padding: 16px;
+    border: 1px dashed var(--line); border-radius: 12px;
+    background: rgba(231,194,125,0.05);
+  }
+  .seat-strip .who { font-family: var(--serif); font-size: 25px; }
+  .seat-strip .where { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 4px; font-weight: 600; }
+
+  .ask { margin-top: 26px; }
+  .ask h2 { font-size: 23px; text-align: center; }
+  .ask > p { text-align: center; color: var(--dim); font-size: 13px; margin: 4px 0 18px; }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .choice {
+    padding: 18px 12px; border-radius: 14px; cursor: pointer; text-align: center;
+    border: 1px solid var(--line-soft); background: rgba(255,255,255,0.03);
+    font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text);
+    line-height: 1.35;
+  }
+  .choice .mark { display: block; font-size: 22px; margin-bottom: 6px; }
+  .choice:hover { background: rgba(255,255,255,0.07); }
+  .choice.yes.sel { border-color: var(--ok); background: rgba(127,214,171,0.14); color: var(--ok); }
+  .choice.no.sel { border-color: var(--no); background: rgba(240,138,138,0.12); color: var(--no); }
+
+  #reasonBox, #messageBox { margin-top: 16px; }
+  #submitBtn { width: 100%; margin-top: 18px; padding: 14px; font-size: 15px; }
+
+  /* result state */
+  .result { text-align: center; padding: 6px 0 0; }
+  .result .icon { font-size: 46px; line-height: 1; }
+  .result h2 { font-size: 27px; margin: 10px 0 6px; }
+  .result p { color: var(--dim); font-size: 14px; margin: 0 auto; max-width: 40ch; }
+  .result .recap {
+    margin-top: 20px; padding: 14px; border-radius: 12px;
+    background: rgba(0,0,0,0.25); font-size: 14px; text-align: left;
+  }
+  .result .recap b { color: var(--dim); font-weight: 600; }
+  .result button { margin-top: 20px; }
+
+  .state { text-align: center; padding: 60px 20px; color: var(--dim); }
+  .state h2 { color: var(--text); font-size: 25px; margin-bottom: 8px; }
+
+  .footer { text-align: center; color: var(--faint); font-size: 12px; margin-top: 24px; }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 420px) {
+    .choices { grid-template-columns: 1fr; }
+    dl.facts > div { grid-template-columns: 78px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loading" class="state"><p>Binubuksan ang imbitasyon…</p></div>
+
+  <div id="invalid" class="state hidden">
+    <h2>Hindi mahanap ang imbitasyon</h2>
+    <p>Maaaring mali ang link o pinalitan na ito. Pakihingi po ulit sa nag-imbita sa inyo.</p>
+  </div>
+
+  <div id="card" class="card hidden">
+    <div class="crest">
+      <div class="eyebrow" id="c-eyebrow">Imbitasyon</div>
+      <div class="age hidden" id="c-age"></div>
+      <div class="name" id="c-name"></div>
+      <div class="rule"></div>
+      <div class="sub" id="c-sub"></div>
+    </div>
+
+    <dl class="facts" id="c-facts"></dl>
+
+    <div class="seat-strip">
+      <div class="who" id="c-guest"></div>
+      <div class="where" id="c-seat"></div>
+    </div>
+
+    <div id="c-note" class="small muted hidden" style="margin-top:16px;text-align:center"></div>
+
+    <!-- ask -->
+    <div class="ask hidden" id="askBox">
+      <h2>Makakarating ka ba?</h2>
+      <p id="deadlineNote"></p>
+
+      <div class="choices">
+        <button type="button" class="choice yes" id="choiceYes"><span class="mark">&#10003;</span>Oo, makakarating ako</button>
+        <button type="button" class="choice no" id="choiceNo"><span class="mark">&#10005;</span>Pasensya na, hindi ako makakarating</button>
+      </div>
+
+      <div id="reasonBox" class="hidden">
+        <label for="reason">Dahilan *</label>
+        <textarea id="reason" placeholder="Halimbawa: May trabaho po ako sa araw na iyon."></textarea>
+      </div>
+
+      <div id="messageBox" class="hidden">
+        <label for="message">Maikling mensahe para sa celebrant (optional)</label>
+        <textarea id="message" placeholder="Happy birthday!"></textarea>
+      </div>
+
+      <button class="primary" id="submitBtn" type="button" disabled>Ipadala ang sagot</button>
+    </div>
+
+    <!-- result -->
+    <div class="result hidden" id="resultBox">
+      <div class="icon" id="r-icon"></div>
+      <h2 id="r-title"></h2>
+      <p id="r-body"></p>
+      <div class="recap" id="r-recap"></div>
+      <button class="ghost" id="changeBtn" type="button">Baguhin ang sagot</button>
+    </div>
+  </div>
+
+  <p class="footer" id="footer"></p>
+</div>
+
+<div id="toast"></div>
+<script src="/invite.js"></script>
+</body>
+</html>
