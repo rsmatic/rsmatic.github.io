@@ -160,6 +160,26 @@ export function newCoordinatorKey() {
 }
 
 /**
+ * What a coordinator sees of a seat. No token: a read-only coordinator has
+ * no reason to hold the link that answers on a guest's behalf.
+ */
+function coordinatorSlotView(slot) {
+  return {
+    id: slot.id,
+    eventId: slot.eventId,
+    table: slot.table,
+    seat: slot.seat,
+    label: slot.label,
+    guestName: slot.guestName,
+    guestContact: slot.guestContact,
+    status: slot.status,
+    reason: slot.reason,
+    message: slot.message,
+    respondedAt: slot.respondedAt,
+  };
+}
+
+/**
  * What a coordinator sees of the event. Deliberately not the whole row:
  * no coordinator key, no design, nothing they cannot change anyway.
  */
@@ -353,42 +373,13 @@ export function createApi({ store, adminKey }) {
           status: 200,
           data: {
             event: coordinatorEventView(event),
-            slots: all.slots.filter((s) => s.eventId === event.id),
+            slots: all.slots.filter((s) => s.eventId === event.id).map(coordinatorSlotView),
           },
         };
       }
 
-      if (action === 'slots') {
-        const slotId = rest[1];
-        if (!slotId) throw new HttpError(404, 'Missing seat id.');
-        const slot = await store.getSlot(slotId);
-        // A coordinator may only touch seats belonging to their own event.
-        if (!slot || slot.eventId !== event.id) throw new HttpError(404, 'Seat not found.');
-
-        if (rest[2] === 'reset' && method === 'POST') {
-          return {
-            status: 200,
-            data: await store.updateSlot(slotId, {
-              status: slot.guestName ? 'invited' : 'open',
-              reason: null,
-              message: null,
-              respondedAt: null,
-            }),
-          };
-        }
-
-        if (rest[2] === 'token' && method === 'POST') {
-          return { status: 200, data: await store.updateSlot(slotId, { token: newToken() }) };
-        }
-
-        if (!rest[2] && method === 'PATCH') {
-          // Names and contacts only — never the table, seat or label.
-          return { status: 200, data: await store.updateSlot(slotId, guestNamePatch(slot, body)) };
-        }
-
-        throw new HttpError(405, 'Method not allowed.');
-      }
-
+      // Reading is all a coordinator does. Anything else falls through to 404
+      // rather than being refused by the page alone.
       throw new HttpError(404, 'No such endpoint.');
     }
 

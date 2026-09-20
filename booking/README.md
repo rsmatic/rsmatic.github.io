@@ -128,15 +128,20 @@ pangalan sa isa sa kanila, maghihiwalay ulit ang imbitasyon nila.
 
 Sa **Step 6 — Coordinator Access** pwede kang mag-isyu ng pangalawang susi para sa
 kung sino man ang tumutulong sa iyo. Binubuksan nito ang `/booking/c.html` —
-ang listahan ng bisita lang.
+**tingin lang**: sino ang darating, sino ang hindi, at bakit.
 
-| Kaya ng coordinator | Hindi kaya |
+| Nakikita ng coordinator | Hindi kaya |
 |---|---|
-| Maglagay ng pangalan at contact sa upuan | Gumawa o magbura ng upuan |
-| Kopyahin ang link at mensahe, mag-share | Baguhin ang mesa, numero ng upuan o label |
-| Gumawa ng bagong link para sa isang upuan | Baguhin o burahin ang event |
-| I-reset ang sagot ng bisita | Galawin ang tema, disenyo o litrato |
-| Makita ang mga sagot at bilang | Makita o palitan ang admin key |
+| Pangalan at contact ng bisita | Baguhin ang kahit ano — pangalan, sagot, upuan |
+| Status ng bawat upuan at ang bilang | Kopyahin o makita ang link ng bisita |
+| Dahilan ng hindi makakarating | Baguhin o burahin ang event |
+| Mensahe ng mga nag-confirm | Galawin ang tema, disenyo o litrato |
+| Filter at search sa listahan | Makita o palitan ang admin key |
+
+Hindi lang sa page ito ipinagbabawal — ang API mismo ay dalawang route lang ang
+binibigay sa coordinator: ang sign-in at ang board. Hindi rin isinasama ang **seat
+tokens** sa ibinibigay sa kanila, kaya wala silang hawak na link na pwedeng
+gamitin para sumagot para sa bisita.
 
 Bawat event ay may sariling susi. Ang **Replace key** ay pinapatay agad ang luma
 (mala-log out ang gumagamit nito), at ang **Revoke access** ay tuluyang isinasara ang pinto.
@@ -318,7 +323,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            121 API checks laban sa tumatakbong server
+    ├── e2e.js            122 API checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 
@@ -360,9 +365,7 @@ Para sa coordinator, ang header ay `x-coordinator-key`:
 | `DELETE` | `/api/events/:id/coordinator` | (admin) Bawiin ang access |
 | `POST` | `/api/coordinator/session` | Suriin ang susi — `{ key }` |
 | `GET` | `/api/coordinator/board` | Ang event at mga upuan nito |
-| `PATCH` | `/api/coordinator/slots/:id` | Pangalan at contact lang |
-| `POST` | `/api/coordinator/slots/:id/reset` | Burahin ang sagot |
-| `POST` | `/api/coordinator/slots/:id/token` | Bagong link |
+
 
 ---
 

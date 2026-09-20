@@ -131,7 +131,7 @@
     }).join('');
   }
 
-  function slotRow(s, allowRemove, mates) {
+  function slotRow(s, o, mates) {
     var note = '';
     if (s.status === 'declined') {
       note = '<div class="note declined"><b>Reason:</b> ' + escapeHtml(s.reason || '—') +
@@ -142,20 +142,35 @@
         (s.message ? '<br><b>Message:</b> ' + escapeHtml(s.message) : '') + '</div>';
     }
     var named = s.guestName ? '' : 'disabled';
+
+    var cells;
+    if (o.readOnly) {
+      cells =
+        '<div class="value' + (s.guestName ? '' : ' empty') + '">' +
+          escapeHtml(s.guestName || '\u2014') + '</div>' +
+        '<div class="value' + (s.guestContact ? '' : ' empty') + '">' +
+          escapeHtml(s.guestContact || '\u2014') + '</div>' +
+        '<div class="actions"><span class="badge ' + s.status + '">' +
+          STATUS_LABEL[s.status] + '</span></div>';
+    } else {
+      cells =
+        '<div><input data-field="guestName" placeholder="Guest name" value="' + escapeHtml(s.guestName) + '" /></div>' +
+        '<div><input data-field="guestContact" placeholder="Viber / FB (optional)" value="' + escapeHtml(s.guestContact || '') + '" /></div>' +
+        '<div class="actions">' +
+          '<span class="badge ' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' +
+          '<button class="tiny" data-act="link" type="button" ' + named + '>Copy link</button>' +
+          '<button class="tiny" data-act="msg" type="button" ' + named + '>Message</button>' +
+          '<button class="tiny ghost" data-act="share" type="button" ' + named + '>Share</button>' +
+          '<button class="tiny ghost" data-act="reset" type="button" ' + (s.respondedAt ? '' : 'disabled') + '>Reset</button>' +
+          '<button class="tiny ghost" data-act="token" type="button">New link</button>' +
+          (o.allowRemove ? '<button class="tiny danger" data-act="del" type="button">Remove</button>' : '') +
+        '</div>';
+    }
+
     return '<div class="slot ' + s.status + '" data-slot="' + escapeHtml(s.id) + '">' +
       '<div class="seat">' + escapeHtml(s.seat) + '<small>' + escapeHtml(s.table) +
         (mates > 1 ? ' &middot; ' + mates + ' seats' : '') + '</small></div>' +
-      '<div><input data-field="guestName" placeholder="Guest name" value="' + escapeHtml(s.guestName) + '" /></div>' +
-      '<div><input data-field="guestContact" placeholder="Viber / FB (optional)" value="' + escapeHtml(s.guestContact || '') + '" /></div>' +
-      '<div class="actions">' +
-        '<span class="badge ' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' +
-        '<button class="tiny" data-act="link" type="button" ' + named + '>Copy link</button>' +
-        '<button class="tiny" data-act="msg" type="button" ' + named + '>Message</button>' +
-        '<button class="tiny ghost" data-act="share" type="button" ' + named + '>Share</button>' +
-        '<button class="tiny ghost" data-act="reset" type="button" ' + (s.respondedAt ? '' : 'disabled') + '>Reset</button>' +
-        '<button class="tiny ghost" data-act="token" type="button">New link</button>' +
-        (allowRemove ? '<button class="tiny danger" data-act="del" type="button">Remove</button>' : '') +
-      '</div>' + note +
+      cells + note +
     '</div>';
   }
 
@@ -188,8 +203,11 @@
     });
 
     o.host.innerHTML = o.slots.map(function (s) {
-      return slotRow(s, o.allowRemove, mates[String(s.guestName || '').trim().toLowerCase()] || 1);
+      return slotRow(s, o, mates[String(s.guestName || '').trim().toLowerCase()] || 1);
     }).join('');
+
+    // Nothing below is wired up when the board is only being read.
+    if (o.readOnly) return;
 
     var byId = {};
     o.slots.forEach(function (s) { byId[s.id] = s; });

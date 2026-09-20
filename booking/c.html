@@ -54,6 +54,8 @@
   .slot .seat { font-family: var(--serif); font-size: 17px; }
   .slot .seat small { display: block; font-family: var(--sans); font-size: 11px; color: var(--faint); letter-spacing: 0.1em; text-transform: uppercase; }
   .slot .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .slot .value { font-size: 15px; }
+  .slot .value.empty { color: var(--faint); }
   .slot .note {
     grid-column: 1 / -1; font-size: 13px; padding: 10px 12px;
     border-radius: 10px; background: var(--ink-2); border-left: 3px solid var(--line);
@@ -122,7 +124,7 @@
 
   <section class="block">
     <h2>Seats</h2>
-    <p class="hint">Put a guest's name on a seat, copy the link, and send it over Messenger or Viber. When they confirm, the seat locks itself.</p>
+    <p class="hint">Who is coming and who is not. This list refreshes on its own as guests reply.</p>
 
     <div id="stats" style="margin-bottom:16px"></div>
 

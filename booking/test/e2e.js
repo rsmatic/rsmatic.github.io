@@ -441,46 +441,45 @@ async function main() {
   r = await call('/api/coordinator/board', { coordinator: ckey });
   ok('the board lists this event only',
     r.status === 200 && r.j.event.id === eventId && r.j.slots.every((x) => x.eventId === eventId));
-  ok('the board carries seat tokens so links can be sent',
-    r.j.slots.length > 0 && !!r.j.slots[0].token);
+  ok('the board never hands out seat tokens',
+    r.j.slots.length > 0 && r.j.slots.every((x) => !('token' in x)),
+    Object.keys(r.j.slots[0] || {}).join(','));
   ok('the coordinator key is never echoed back',
     JSON.stringify(r.j).indexOf(ckey) < 0);
   ok('the event view leaves out the design and the key',
     !('coordinatorKey' in r.j.event) && !('accentColor' in r.j.event) && !('photoUpdatedAt' in r.j.event),
     Object.keys(r.j.event).join(','));
 
-  console.log('\n== what a coordinator may do ==');
+  console.log('\n== the coordinator page is read-only ==');
   const seat = r.j.slots.find((x) => x.status === 'open') || r.j.slots[0];
-  r = await call('/api/coordinator/slots/' + seat.id, {
-    coordinator: ckey, method: 'PATCH', body: { guestName: 'Tita Baby', guestContact: '0917' },
-  });
-  ok('naming a seat works and marks it invited',
-    r.j.guestName === 'Tita Baby' && r.j.status === 'invited', r.j.status);
-  ok('reissuing a link works',
-    (await call('/api/coordinator/slots/' + seat.id + '/token', { coordinator: ckey, method: 'POST' })).j.token !== seat.token);
-
-  console.log('\n== what a coordinator may not do ==');
-  r = await call('/api/coordinator/slots/' + seat.id, {
-    coordinator: ckey, method: 'PATCH', body: { table: 'Hacked', seat: '999', label: 'Hacked' },
-  });
-  ok('the table, seat and label are ignored',
-    r.j.table !== 'Hacked' && r.j.seat !== '999' && r.j.label !== 'Hacked',
-    [r.j.table, r.j.seat, r.j.label].join(' / '));
+  ok('cannot rename a guest',
+    (await call('/api/coordinator/slots/' + seat.id, {
+      coordinator: ckey, method: 'PATCH', body: { guestName: 'Tita Baby' },
+    })).status === 404);
+  ok('cannot reissue a link',
+    (await call('/api/coordinator/slots/' + seat.id + '/token', { coordinator: ckey, method: 'POST' })).status === 404);
+  ok('cannot undo an answer',
+    (await call('/api/coordinator/slots/' + seat.id + '/reset', { coordinator: ckey, method: 'POST' })).status === 404);
+  r = await call('/api/events');
+  ok('the seat is untouched by all of that',
+    r.j.slots.find((x) => x.id === seat.id).guestName !== 'Tita Baby',
+    r.j.slots.find((x) => x.id === seat.id).guestName);
   ok('cannot read the admin event list',
     (await call('/api/events', { coordinator: ckey, admin: false })).status === 401);
   ok('cannot change the event',
     (await call('/api/events/' + eventId, { coordinator: ckey, admin: false, method: 'PATCH', body: { title: 'Nope' } })).status === 401);
   ok('cannot delete a seat',
-    (await call('/api/coordinator/slots/' + seat.id, { coordinator: ckey, method: 'DELETE' })).status === 405);
+    (await call('/api/coordinator/slots/' + seat.id, { coordinator: ckey, method: 'DELETE' })).status === 404);
   ok('cannot create seats',
     (await call('/api/events/' + eventId + '/slots', { coordinator: ckey, admin: false, method: 'POST', body: { count: 1 } })).status === 401);
   ok('cannot issue itself a new key',
     (await call('/api/events/' + eventId + '/coordinator', { coordinator: ckey, admin: false, method: 'POST' })).status === 401);
 
   const other = await call('/api/events', { method: 'POST', body: { title: 'Someone else', eventDate: '2026-12-01' } });
-  const otherSlots = await call('/api/events/' + other.j.id + '/slots', { method: 'POST', body: { table: 'T', count: 1 } });
-  ok('cannot touch a seat from another event',
-    (await call('/api/coordinator/slots/' + otherSlots.j.created[0].id, { coordinator: ckey, method: 'PATCH', body: { guestName: 'x' } })).status === 404);
+  await call('/api/events/' + other.j.id + '/coordinator', { method: 'POST' });
+  r = await call('/api/coordinator/board', { coordinator: ckey });
+  ok('sees only its own event, never another one',
+    r.j.event.id === eventId && r.j.slots.every((x) => x.eventId === eventId));
   await call('/api/events/' + other.j.id, { method: 'DELETE' });
 
   console.log('\n== revoking ==');

@@ -1,9 +1,9 @@
 /* ===========================================================
    Coordinator page — the guest list and nothing else.
 
-   A coordinator can name seats, send invitations, reissue a
-   link and undo an answer. They cannot touch the event, its
-   design, the seating plan itself, or the admin key.
+   Read-only: who is coming, who is not, and why. Nothing on
+   this page can be changed, and the API gives it no way to —
+   the only coordinator routes are the sign-in and the board.
    =========================================================== */
 
 (function () {
@@ -58,16 +58,6 @@
     }, function () {
       throw new Error('Cannot reach the API' + (apiBase() ? ' at ' + apiBase() : '') + '.');
     });
-  }
-
-  /** The guest opens i.html next to this page. */
-  function pageBase() {
-    return window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
-  }
-
-  function inviteLink(slot) { return pageBase() + 'i.html?t=' + slot.token; }
-  function inviteMessage(slot) {
-    return B.inviteMessage(state.event, slot, inviteLink(slot), state.slots);
   }
 
   /* --------------------------------------------------------------- gate */
@@ -153,20 +143,7 @@
       slots: slots,
       all: state.slots,
       emptyText: state.slots.length ? 'Nothing matches this filter.' : '',
-      allowRemove: false,
-      link: inviteLink,
-      message: inviteMessage,
-      save: function (id, patch) {
-        return api('/slots/' + id, { method: 'PATCH', body: patch }).then(load);
-      },
-      reset: function (id) {
-        return api('/slots/' + id + '/reset', { method: 'POST' }).then(load);
-      },
-      newLink: function (id) {
-        return api('/slots/' + id + '/token', { method: 'POST' }).then(load);
-      },
-      done: function (message) { toast(message); },
-      error: fail,
+      readOnly: true,
     });
   }
 
