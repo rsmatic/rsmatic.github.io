@@ -56,7 +56,7 @@ function readBody(req) {
     let raw = '';
     req.on('data', (chunk) => {
       raw += chunk;
-      if (raw.length > 1000000) {
+      if (raw.length > 2000000) { // a photo arrives as a base64 data URL
         req.destroy();
         reject(new HttpError(413, 'Request too large.'));
       }
@@ -85,6 +85,15 @@ const server = http.createServer(async (req, res) => {
         body: await readBody(req),
         adminKey: req.headers['x-admin-key'] || url.searchParams.get('key') || '',
       });
+      if (result.binary) {
+        const bytes = Buffer.from(result.binary.base64, 'base64');
+        res.writeHead(200, {
+          'Content-Type': result.binary.mime,
+          'Content-Length': bytes.length,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        });
+        return res.end(bytes);
+      }
       return sendJson(res, result.status, result.data);
     }
 

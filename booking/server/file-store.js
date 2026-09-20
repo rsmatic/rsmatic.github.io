@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DB_FILE = path.join(HERE, 'data', 'db.json');
 
-const emptyDb = () => ({ events: [], slots: [] });
+const emptyDb = () => ({ events: [], slots: [], photos: {} });
 
 function ensureFile() {
   const dir = path.dirname(DB_FILE);
@@ -29,6 +29,7 @@ async function readFile() {
   const data = raw.trim() ? JSON.parse(raw) : emptyDb();
   if (!Array.isArray(data.events)) data.events = [];
   if (!Array.isArray(data.slots)) data.slots = [];
+  if (!data.photos || typeof data.photos !== 'object') data.photos = {};
   return data;
 }
 
@@ -90,7 +91,22 @@ export const fileStore = {
     await transaction((data) => {
       data.events = data.events.filter((e) => e.id !== id);
       data.slots = data.slots.filter((s) => s.eventId !== id);
+      delete data.photos[id];
     });
+  },
+
+  /* Photos are kept out of snapshot() so the admin's poll stays small. */
+  async getPhoto(eventId) {
+    const data = await readFile();
+    return data.photos[eventId] || null;
+  },
+
+  async setPhoto(eventId, photo) {
+    await transaction((data) => { data.photos[eventId] = photo; });
+  },
+
+  async deletePhoto(eventId) {
+    await transaction((data) => { delete data.photos[eventId]; });
   },
 
   async getSlot(id) {

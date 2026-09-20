@@ -215,6 +215,7 @@
     $('eventScope').classList.toggle('hidden', !ev);
     if (!ev) return;
     renderThemes(ev);
+    renderDesign(ev);
     fillDetailForm(ev);
     refreshLinkNotes();
     renderStats();
@@ -246,23 +247,30 @@
 
   /* Swatch colours come from app/themes.js, never from stored data, so they
      are safe to drop straight into a style attribute. */
+  function themeCard(t, current) {
+    return '<button type="button" class="theme-card' + (t.id === current ? ' active' : '') +
+      '" data-theme-id="' + escapeHtml(t.id) + '">' +
+      '<span class="preview" style="background:' + t.swatch[0] + '">' +
+        '<span class="dot" style="background:' + t.swatch[1] + '"></span>' +
+        '<span class="dot" style="background:' + t.swatch[2] + '"></span>' +
+        '<span class="bar" style="background:' + t.swatch[1] + '"></span>' +
+      '</span>' +
+      '<span class="meta">' +
+        (t.id === current ? '<span class="tcheck">&#10003;</span>' : '') +
+        '<span class="tname">' + escapeHtml(t.name) + '</span>' +
+        '<span class="tnote">' + escapeHtml(t.note) + '</span>' +
+      '</span></button>';
+  }
+
   function renderThemes(ev) {
     var host = $('themeGrid');
     var current = ev.theme || window.ABY_DEFAULT_THEME;
 
-    host.innerHTML = window.ABY_THEMES.map(function (t) {
-      return '<button type="button" class="theme-card' + (t.id === current ? ' active' : '') +
-        '" data-theme-id="' + escapeHtml(t.id) + '">' +
-        '<span class="preview" style="background:' + t.swatch[0] + '">' +
-          '<span class="dot" style="background:' + t.swatch[1] + '"></span>' +
-          '<span class="dot" style="background:' + t.swatch[2] + '"></span>' +
-          '<span class="bar" style="background:' + t.swatch[1] + '"></span>' +
-        '</span>' +
-        '<span class="meta">' +
-          (t.id === current ? '<span class="tcheck">&#10003;</span>' : '') +
-          '<span class="tname">' + escapeHtml(t.name) + '</span>' +
-          '<span class="tnote">' + escapeHtml(t.note) + '</span>' +
-        '</span></button>';
+    host.innerHTML = window.ABY_THEME_GROUPS.map(function (group) {
+      var items = window.ABY_THEMES.filter(function (t) { return t.group === group.id; });
+      if (!items.length) return '';
+      return '<div class="theme-group">' + escapeHtml(group.name) + '</div>' +
+        '<div class="theme-row">' + items.map(function (t) { return themeCard(t, current); }).join('') + '</div>';
     }).join('');
 
     Array.prototype.forEach.call(host.querySelectorAll('[data-theme-id]'), function (btn) {
@@ -291,6 +299,104 @@
      would throw away edits made since the last save — which is exactly what
      happened to the age setting: pick "Hide it", wait, and the reload put
      "Show the age" back before Save was ever pressed. */
+  var DESIGN_CHOICES = ['photoShape', 'photoSize', 'borderStyle', 'cardCorners', 'cardAlign'];
+  var DESIGN_FALLBACK = {
+    photoShape: 'circle', photoSize: 'medium', borderStyle: 'double',
+    cardCorners: 'soft', cardAlign: 'center',
+  };
+
+  function themeSwatch(id) {
+    for (var i = 0; i < window.ABY_THEMES.length; i += 1) {
+      if (window.ABY_THEMES[i].id === id) return window.ABY_THEMES[i].swatch;
+    }
+    return ['#170e14', '#e7c27d', '#e9a6b8'];
+  }
+
+  /* Every control here saves on change, so there is nothing to press and
+     nothing to lose — and the console repaints itself as the preview. */
+  function renderDesign(ev) {
+    DESIGN_CHOICES.forEach(function (field) {
+      var el = $('dz-' + field);
+      if (el && document.activeElement !== el) el.value = ev[field] || DESIGN_FALLBACK[field];
+    });
+
+    var swatch = themeSwatch(ev.theme || window.ABY_DEFAULT_THEME);
+    var accent = $('dz-accentColor');
+    if (accent && document.activeElement !== accent) accent.value = ev.accentColor || swatch[1];
+    var border = $('dz-borderColor');
+    if (border && document.activeElement !== border) border.value = ev.borderColor || swatch[1];
+
+    window.abyApplyColors(ev.accentColor, ev.borderColor);
+    renderPhoto(ev);
+  }
+
+  function saveDesign(field, value) {
+    var ev = currentEvent();
+    if (!ev) return;
+    var body = {};
+    body[field] = value;
+    api('/events/' + ev.id, { method: 'PATCH', body: body })
+      .then(load)
+      .then(function () { toast('Design saved.'); })
+      .catch(fail);
+  }
+
+  /* ---- photo ---- */
+
+  var photoObjectUrl = null;
+  var photoShowing = '';   // eventId|photoUpdatedAt currently on screen
+
+  function renderPhoto(ev) {
+    var key = ev.id + '|' + (ev.photoUpdatedAt || '');
+    if (key === photoShowing) return;
+    photoShowing = key;
+
+    var box = $('photoPreview');
+    var img = $('photoImg');
+    if (photoObjectUrl) { URL.revokeObjectURL(photoObjectUrl); photoObjectUrl = null; }
+
+    if (!ev.photoUpdatedAt) {
+      box.classList.remove('has');
+      img.removeAttribute('src');
+      $('photoRemove').classList.add('hidden');
+      return;
+    }
+
+    $('photoRemove').classList.remove('hidden');
+    // An <img> cannot carry the admin key, so fetch the bytes and show a blob.
+    fetch(apiBase() + '/api/events/' + ev.id + '/photo', { headers: { 'x-admin-key': state.key } })
+      .then(function (res) { return res.ok ? res.blob() : null; })
+      .then(function (blob) {
+        if (!blob) return;
+        photoObjectUrl = URL.createObjectURL(blob);
+        img.src = photoObjectUrl;
+        box.classList.add('has');
+      })
+      .catch(function () { /* the preview is optional */ });
+  }
+
+  /* Shrinking on the phone keeps the upload small and the stored row modest. */
+  function shrinkImage(file, maxEdge) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = function () { reject(new Error('That file could not be read.')); };
+      reader.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(new Error('That file is not an image.')); };
+        img.onload = function () {
+          var scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function fillDetailForm(ev) {
     if (state.detailDirty) return;
     var map = {
@@ -558,6 +664,47 @@
   $('baseUrl').addEventListener('input', function () {
     try { localStorage.setItem(BASE_STORE, $('baseUrl').value.trim()); } catch (e) { /* ignore */ }
     refreshLinkNotes();
+  });
+
+  DESIGN_CHOICES.concat(['accentColor', 'borderColor']).forEach(function (field) {
+    var el = $('dz-' + field);
+    if (el) el.addEventListener('change', function () { saveDesign(field, el.value); });
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-clear]'), function (btn) {
+    btn.addEventListener('click', function () { saveDesign(btn.getAttribute('data-clear'), ''); });
+  });
+
+  $('photoPick').addEventListener('click', function () { $('photoInput').click(); });
+
+  $('photoInput').addEventListener('change', function () {
+    var input = $('photoInput');
+    var file = input.files && input.files[0];
+    var ev = currentEvent();
+    if (!file || !ev) return;
+
+    toast('Preparing the photo…');
+    shrinkImage(file, 900)
+      .then(function (dataUrl) {
+        return api('/events/' + ev.id + '/photo', { method: 'PUT', body: { dataUrl: dataUrl } });
+      })
+      .then(function () {
+        photoShowing = '';
+        return load();
+      })
+      .then(function () { toast('Photo uploaded.'); })
+      .catch(fail)
+      .then(function () { input.value = ''; });
+  });
+
+  $('photoRemove').addEventListener('click', function () {
+    var ev = currentEvent();
+    if (!ev) return;
+    if (!confirm('Remove the photo from the invitation?')) return;
+    api('/events/' + ev.id + '/photo', { method: 'DELETE' })
+      .then(function () { photoShowing = ''; return load(); })
+      .then(function () { toast('Photo removed.'); })
+      .catch(fail);
   });
 
   $('detailForm').addEventListener('input', markDetailDirty);

@@ -37,8 +37,9 @@ function makeElement(id) {
     textContent: '',
     innerHTML: '',
     disabled: false,
+    files: [],
     href: '',
-    style: {},
+    style: { setProperty() {}, removeProperty() {} },
     listeners,
     classList: {
       add: (c) => classes.add(c),
@@ -110,6 +111,7 @@ function fetchStub(url, init = {}) {
       return jsonRes(200, EVENT);
     }
   }
+  if (u.includes('/photo')) return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) });
   if (u.endsWith('/api/events')) return jsonRes(200, { events: [EVENT], slots: [] });
   return jsonRes(404, { error: 'not found' });
 }
@@ -136,6 +138,9 @@ const sandbox = {
   RegExp,
   Error,
   URLSearchParams,
+  URL: { createObjectURL: () => 'blob:fake', revokeObjectURL: () => {} },
+  FileReader: class { readAsDataURL() {} },
+  Image: class {},
   fetch: fetchStub,
   confirm: () => true,
   navigator: {},

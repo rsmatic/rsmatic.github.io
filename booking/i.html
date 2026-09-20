@@ -16,7 +16,7 @@
   .wrap { max-width: 560px; margin: 0 auto; padding: 32px 16px 64px; }
 
   .card {
-    border: 1px solid var(--line);
+    border: 1px solid var(--frame);
     border-radius: 20px;
     background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, transparent), color-mix(in srgb, var(--text) 2%, transparent));
     padding: 30px 24px;
@@ -27,9 +27,44 @@
   .card::after {
     content: '';
     position: absolute; inset: 7px;
-    border: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--frame) 65%, transparent);
     border-radius: 14px;
     pointer-events: none;
+  }
+
+  /* ---- options the host picks in the admin console ---- */
+  .card[data-corners="sharp"] { border-radius: 3px; }
+  .card[data-corners="sharp"]::after { border-radius: 0; }
+  .card[data-corners="round"] { border-radius: 34px; }
+  .card[data-corners="round"]::after { border-radius: 28px; }
+
+  .card[data-border="none"] { border-color: transparent; }
+  .card[data-border="none"]::after { display: none; }
+  .card[data-border="thin"]::after { display: none; }
+  .card[data-border="dashed"] { border-style: dashed; border-width: 2px; }
+  .card[data-border="dashed"]::after { display: none; }
+
+  .card[data-align="left"] .crest,
+  .card[data-align="left"] .seat-strip,
+  .card[data-align="left"] .ask > h2,
+  .card[data-align="left"] .ask > p,
+  .card[data-align="left"] #c-note { text-align: left; }
+  .card[data-align="left"] .photo-wrap { justify-content: flex-start; }
+  .card[data-align="left"] .crest .rule { margin-left: 0; }
+
+  .photo-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
+  .photo-wrap img {
+    width: var(--photo-w, 164px); aspect-ratio: 1 / 1; object-fit: cover; display: block;
+    border: 1px solid var(--frame); background: var(--ink-2);
+  }
+  .card[data-photo-size="small"] { --photo-w: 112px; }
+  .card[data-photo-size="medium"] { --photo-w: 164px; }
+  .card[data-photo-size="large"] { --photo-w: 224px; }
+  .card[data-photo-shape="circle"] .photo-wrap img { border-radius: 50%; }
+  .card[data-photo-shape="rounded"] .photo-wrap img { border-radius: 20px; }
+  .card[data-photo-shape="square"] .photo-wrap img { border-radius: 0; }
+  .card[data-photo-shape="arch"] .photo-wrap img {
+    aspect-ratio: 3 / 4; border-radius: 999px 999px 16px 16px;
   }
 
   .crest { text-align: center; margin-bottom: 20px; }
@@ -130,6 +165,8 @@
   </div>
 
   <div id="card" class="card hidden">
+    <div class="photo-wrap hidden" id="c-photo-wrap"><img id="c-photo" alt="" /></div>
+
     <div class="crest">
       <div class="eyebrow" id="c-eyebrow">Invitation</div>
       <div class="age hidden" id="c-age"></div>

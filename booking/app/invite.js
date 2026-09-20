@@ -110,6 +110,27 @@
     var age = ageAt(ev.birthDate, ev.eventDate);
 
     window.abyApplyTheme(ev.theme);
+    window.abyApplyColors(ev.accentColor, ev.borderColor);
+
+    var card = $('card');
+    card.setAttribute('data-border', ev.borderStyle || 'double');
+    card.setAttribute('data-corners', ev.cardCorners || 'soft');
+    card.setAttribute('data-align', ev.cardAlign || 'center');
+    card.setAttribute('data-photo-shape', ev.photoShape || 'circle');
+    card.setAttribute('data-photo-size', ev.photoSize || 'medium');
+
+    // ?v=<updatedAt> makes a new upload a new URL, so the photo can be
+    // cached hard without ever going stale.
+    var photoWrap = $('c-photo-wrap');
+    if (ev.photoUpdatedAt) {
+      $('c-photo').src = apiBase() + '/api/invite/' + encodeURIComponent(token) +
+        '/photo?v=' + encodeURIComponent(ev.photoUpdatedAt);
+      $('c-photo').alt = ev.celebrant || ev.title || '';
+      photoWrap.classList.remove('hidden');
+    } else {
+      $('c-photo').removeAttribute('src');
+      photoWrap.classList.add('hidden');
+    }
 
     $('c-eyebrow').textContent = 'You are invited to';
 

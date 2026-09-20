@@ -14,7 +14,29 @@ export class HttpError extends Error {
 
 export const EVENT_FIELDS = ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
   'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
-  'theme', 'ageDisplay', 'ageLabel'];
+  'theme', 'ageDisplay', 'ageLabel',
+  'photoShape', 'photoSize', 'borderStyle', 'cardCorners', 'cardAlign',
+  'accentColor', 'borderColor'];
+
+/** Look of the invitation card. Anything outside these lists is refused. */
+export const DESIGN_OPTIONS = {
+  photoShape: ['circle', 'rounded', 'square', 'arch'],
+  photoSize: ['small', 'medium', 'large'],
+  borderStyle: ['none', 'thin', 'double', 'dashed'],
+  cardCorners: ['sharp', 'soft', 'round'],
+  cardAlign: ['center', 'left'],
+};
+export const DESIGN_DEFAULTS = {
+  photoShape: 'circle',
+  photoSize: 'medium',
+  borderStyle: 'double',
+  cardCorners: 'soft',
+  cardAlign: 'center',
+};
+
+/** Base64 for a photo, before the ~33% encoding overhead: about 450 KB. */
+const MAX_PHOTO_BASE64 = 620000;
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /** What stands above the celebrant's name on the invitation. */
 export const AGE_DISPLAYS = ['number', 'custom', 'hidden'];
@@ -22,10 +44,56 @@ export const DEFAULT_AGE_DISPLAY = 'number';
 
 /** Keep in sync with app/themes.js — the ids are the same list. */
 export const THEMES = ['rose-gold', 'midnight', 'emerald', 'burgundy', 'noir',
-  'tropical', 'ivory', 'blush', 'sage', 'lavender'];
+  'tropical', 'ivory', 'blush', 'sage', 'lavender',
+  'kids-carnival', 'kids-pastel', 'debut-rose', 'debut-pearl',
+  'anniversary-gold', 'anniversary-silver', 'christmas-classic', 'christmas-frost',
+  'christening', 'fiesta'];
 export const DEFAULT_THEME = 'rose-gold';
 
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
+
+function normalizeChoice(field, value) {
+  const choice = str(value);
+  if (!choice) return DESIGN_DEFAULTS[field];
+  if (!DESIGN_OPTIONS[field].includes(choice)) {
+    throw new HttpError(400, 'Unknown ' + field + ': ' + choice);
+  }
+  return choice;
+}
+
+/** '' hands the colour back to the theme; anything else must be #rrggbb. */
+function normalizeColor(value) {
+  const color = str(value);
+  if (!color) return '';
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+    throw new HttpError(400, 'A colour must look like #rrggbb.');
+  }
+  return color.toLowerCase();
+}
+
+/** Splits "data:image/jpeg;base64,AAA" and refuses anything else. */
+function readPhoto(dataUrl) {
+  const raw = str(dataUrl);
+  const match = raw.match(/^data:([a-z]+\/[a-z+.-]+);base64,([A-Za-z0-9+/=]+)$/i);
+  if (!match) throw new HttpError(400, 'The photo must be a base64 data URL.');
+  const [, mime, base64] = match;
+  if (!PHOTO_TYPES.includes(mime.toLowerCase())) {
+    throw new HttpError(400, 'The photo must be a JPEG, PNG or WebP.');
+  }
+  if (base64.length > MAX_PHOTO_BASE64) {
+    throw new HttpError(413, 'That photo is too large. Try a smaller one.');
+  }
+  return { mime: mime.toLowerCase(), base64 };
+}
+
+function applyDesign(target, body, always) {
+  for (const field of Object.keys(DESIGN_OPTIONS)) {
+    if (always || field in body) target[field] = normalizeChoice(field, body[field]);
+  }
+  for (const field of ['accentColor', 'borderColor']) {
+    if (always || field in body) target[field] = normalizeColor(body[field]);
+  }
+}
 
 function normalizeAgeDisplay(value) {
   const mode = str(value);
@@ -108,6 +176,14 @@ function publicSlotView(slot, event) {
       theme: event.theme,
       ageDisplay: event.ageDisplay,
       ageLabel: event.ageLabel,
+      photoShape: event.photoShape,
+      photoSize: event.photoSize,
+      borderStyle: event.borderStyle,
+      cardCorners: event.cardCorners,
+      cardAlign: event.cardAlign,
+      accentColor: event.accentColor,
+      borderColor: event.borderColor,
+      photoUpdatedAt: event.photoUpdatedAt || null,
       dressCode: event.dressCode,
       note: event.note,
       rsvpDeadline: event.rsvpDeadline,
@@ -146,6 +222,12 @@ export function createApi({ store, adminKey }) {
       if (!slot) throw new HttpError(404, 'This invitation is not valid.');
       const event = await store.getEvent(slot.eventId);
       if (!event) throw new HttpError(404, 'This event no longer exists.');
+
+      if (rest[1] === 'photo' && method === 'GET') {
+        const photo = await store.getPhoto(event.id);
+        if (!photo) throw new HttpError(404, 'This event has no photo.');
+        return { status: 200, binary: photo };
+      }
 
       if (method === 'GET') {
         return { status: 200, data: publicSlotView(slot, event) };
@@ -197,6 +279,8 @@ export function createApi({ store, adminKey }) {
         event.venueMapUrl = normalizeUrl(body.venueMapUrl);
         event.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
         event.ageLabel = str(body.ageLabel).slice(0, 40);
+        event.photoUpdatedAt = '';
+        applyDesign(event, body, true);
         await store.createEvent(event);
         return { status: 201, data: event };
       }
@@ -232,6 +316,33 @@ export function createApi({ store, adminKey }) {
         return { status: 201, data: { created: made } };
       }
 
+      if (eventId && rest[1] === 'photo') {
+        const event = await store.getEvent(eventId);
+        if (!event) throw new HttpError(404, 'Event not found.');
+
+        if (method === 'GET') {
+          const photo = await store.getPhoto(eventId);
+          if (!photo) throw new HttpError(404, 'This event has no photo.');
+          return { status: 200, binary: photo };
+        }
+
+        if (method === 'PUT' || method === 'POST') {
+          const { mime, base64 } = readPhoto(body.dataUrl);
+          const updatedAt = new Date().toISOString();
+          await store.setPhoto(eventId, { mime, base64, updatedAt });
+          await store.updateEvent(eventId, { photoUpdatedAt: updatedAt });
+          return { status: 200, data: { ok: true, photoUpdatedAt: updatedAt } };
+        }
+
+        if (method === 'DELETE') {
+          await store.deletePhoto(eventId);
+          await store.updateEvent(eventId, { photoUpdatedAt: '' });
+          return { status: 200, data: { ok: true } };
+        }
+
+        throw new HttpError(405, 'Method not allowed.');
+      }
+
       if (eventId && rest[1] === 'slots' && method === 'DELETE') {
         const event = await store.getEvent(eventId);
         if (!event) throw new HttpError(404, 'Event not found.');
@@ -248,6 +359,7 @@ export function createApi({ store, adminKey }) {
         if ('venueMapUrl' in body) patch.venueMapUrl = normalizeUrl(body.venueMapUrl);
         if ('ageDisplay' in body) patch.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
         if ('ageLabel' in body) patch.ageLabel = str(body.ageLabel).slice(0, 40);
+        applyDesign(patch, body, false);
         const updated = await store.updateEvent(eventId, patch);
         if (!updated) throw new HttpError(404, 'Event not found.');
         return { status: 200, data: updated };

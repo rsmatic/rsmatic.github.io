@@ -26,7 +26,9 @@ const SLOT_COLUMNS = {
 
 const EVENT_COLUMNS = ['id', 'title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
   'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
-  'theme', 'ageDisplay', 'ageLabel', 'createdAt'];
+  'theme', 'ageDisplay', 'ageLabel',
+  'photoShape', 'photoSize', 'borderStyle', 'cardCorners', 'cardAlign',
+  'accentColor', 'borderColor', 'photoUpdatedAt', 'createdAt'];
 
 const slotFromRow = (row) => (row ? {
   id: row.id,
@@ -106,9 +108,30 @@ export function createD1Store(d1) {
 
     async deleteEvent(id) {
       await d1.batch([
+        d1.prepare('DELETE FROM event_photos WHERE eventId = ?').bind(id),
         d1.prepare('DELETE FROM slots WHERE eventId = ?').bind(id),
         d1.prepare('DELETE FROM events WHERE id = ?').bind(id),
       ]);
+    },
+
+    /* Photos live in their own table so the admin's 15-second poll never
+       drags a few hundred kilobytes of image along with the seat list. */
+    async getPhoto(eventId) {
+      const row = await d1.prepare('SELECT mime, data, updatedAt FROM event_photos WHERE eventId = ?')
+        .bind(eventId).first();
+      return row ? { mime: row.mime, base64: row.data, updatedAt: row.updatedAt } : null;
+    },
+
+    async setPhoto(eventId, photo) {
+      await d1.prepare(
+        'INSERT INTO event_photos (eventId, mime, data, updatedAt) VALUES (?, ?, ?, ?) ' +
+        'ON CONFLICT(eventId) DO UPDATE SET mime = excluded.mime, data = excluded.data, ' +
+        'updatedAt = excluded.updatedAt',
+      ).bind(eventId, photo.mime, photo.base64, photo.updatedAt).run();
+    },
+
+    async deletePhoto(eventId) {
+      await d1.prepare('DELETE FROM event_photos WHERE eventId = ?').bind(eventId).run();
     },
 
     async getSlot(id) {

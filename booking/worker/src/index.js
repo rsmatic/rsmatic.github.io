@@ -27,6 +27,22 @@ function corsHeaders(request, env) {
   return headers;
 }
 
+/* A photo is cached forever: the page asks for it with ?v=<updatedAt>, so a
+   new upload is a new URL rather than a stale hit. */
+function image(photo, extra) {
+  const binary = atob(photo.base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Response(bytes, {
+    status: 200,
+    headers: {
+      'Content-Type': photo.mime,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      ...extra,
+    },
+  });
+}
+
 function json(payload, status, extra) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -81,6 +97,7 @@ export default {
         body,
         adminKey: request.headers.get('x-admin-key') || url.searchParams.get('key') || '',
       });
+      if (result.binary) return image(result.binary, cors);
       return json(result.data, result.status, cors);
     } catch (err) {
       const status = err instanceof HttpError ? err.status : 500;

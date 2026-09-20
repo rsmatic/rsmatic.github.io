@@ -43,9 +43,11 @@ async function checkThemeListsAgree() {
 
   const { THEMES } = await import('../api/core.js');
   const source = readFileSync(join(here, '..', 'app', 'themes.js'), 'utf8');
-  const uiIds = [...source.matchAll(/\{\s*id:\s*'([^']+)'/g)].map((m) => m[1]);
+  // ABY_THEME_GROUPS carries { id: ... } entries too, so read only the themes.
+  const list = source.slice(source.indexOf('window.ABY_THEMES = ['));
+  const uiIds = [...list.matchAll(/\{\s*id:\s*'([^']+)'/g)].map((m) => m[1]);
 
-  ok('app/themes.js offers 10 themes', uiIds.length === 10, String(uiIds.length));
+  ok('app/themes.js offers 20 themes', uiIds.length === 20, String(uiIds.length));
   ok('the picker and the server agree on theme ids',
     uiIds.join(',') === THEMES.join(','), uiIds.join(',') + ' vs ' + THEMES.join(','));
 }
@@ -125,6 +127,60 @@ async function main() {
   ok('the wording is capped at 40 characters', r.j.ageLabel.length === 40, String(r.j.ageLabel.length));
   await call('/api/events/' + eventId, { method: 'PATCH', body: { ageDisplay: 'custom', ageLabel: 'Fourtis' } });
 
+  console.log('\n== invitation design ==');
+  r = await call('/api/events');
+  const design = r.j.events.find((e) => e.id === eventId);
+  ok('a new event gets the design defaults',
+    design.photoShape === 'circle' && design.photoSize === 'medium' &&
+    design.borderStyle === 'double' && design.cardCorners === 'soft' && design.cardAlign === 'center',
+    JSON.stringify([design.photoShape, design.photoSize, design.borderStyle, design.cardCorners, design.cardAlign]));
+  r = await call('/api/events/' + eventId, {
+    method: 'PATCH',
+    body: { photoShape: 'arch', photoSize: 'large', borderStyle: 'dashed', cardCorners: 'round', cardAlign: 'left' },
+  });
+  ok('every design choice is stored',
+    r.j.photoShape === 'arch' && r.j.photoSize === 'large' && r.j.borderStyle === 'dashed' &&
+    r.j.cardCorners === 'round' && r.j.cardAlign === 'left', JSON.stringify(r.j.photoShape));
+  ok('an unknown shape -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { photoShape: 'triangle' } })).status === 400);
+  ok('an unknown border -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { borderStyle: 'neon' } })).status === 400);
+
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { accentColor: '#FF8800', borderColor: '#123456' } });
+  ok('colours are stored lowercase', r.j.accentColor === '#ff8800' && r.j.borderColor === '#123456',
+    r.j.accentColor + ' / ' + r.j.borderColor);
+  ok('a colour that is not #rrggbb -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { accentColor: 'red' } })).status === 400);
+  ok('a colour of "" hands it back to the theme',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { accentColor: '' } })).j.accentColor === '');
+
+  console.log('\n== photo ==');
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  ok('an event starts with no photo',
+    (await call('/api/events/' + eventId + '/photo')).status === 404);
+  ok('a data URL that is not an image -> 400',
+    (await call('/api/events/' + eventId + '/photo', { method: 'PUT', body: { dataUrl: 'data:text/html;base64,PGI+' } })).status === 400);
+  ok('something that is not a data URL -> 400',
+    (await call('/api/events/' + eventId + '/photo', { method: 'PUT', body: { dataUrl: 'https://example.com/x.png' } })).status === 400);
+  ok('an oversized photo -> 413',
+    (await call('/api/events/' + eventId + '/photo', { method: 'PUT', body: { dataUrl: 'data:image/jpeg;base64,' + 'A'.repeat(700000) } })).status === 413);
+
+  r = await call('/api/events/' + eventId + '/photo', { method: 'PUT', body: { dataUrl: 'data:image/png;base64,' + PNG } });
+  ok('a PNG uploads', r.status === 200 && !!r.j.photoUpdatedAt, JSON.stringify(r.j));
+  const stamp = r.j.photoUpdatedAt;
+
+  let raw = await fetch(API + '/api/events/' + eventId + '/photo', { headers: { 'x-admin-key': KEY } });
+  const bytes = new Uint8Array(await raw.arrayBuffer());
+  ok('the photo comes back as image bytes',
+    raw.headers.get('content-type') === 'image/png' && bytes[0] === 0x89 && bytes[1] === 0x50,
+    raw.headers.get('content-type') + ' / ' + bytes[0]);
+  ok('the photo is cached hard', /immutable/.test(raw.headers.get('cache-control') || ''),
+    raw.headers.get('cache-control'));
+
+  r = await call('/api/events');
+  ok('the admin list carries the stamp but not the image',
+    r.j.events.find((e) => e.id === eventId).photoUpdatedAt === stamp &&
+    JSON.stringify(r.j.events).indexOf(PNG.slice(0, 40)) < 0);
   console.log('\n== venue map link ==');
   r = await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: 'https://maps.app.goo.gl/abc123' } });
   ok('an https link is kept', r.j.venueMapUrl === 'https://maps.app.goo.gl/abc123', r.j.venueMapUrl);
@@ -167,6 +223,23 @@ async function main() {
     r.j.event.ageDisplay + ' / ' + r.j.event.ageLabel);
   ok('the map link reaches the guest page', r.j.event.venueMapUrl === 'https://maps.example/venue',
     r.j.event.venueMapUrl);
+  ok('the design reaches the guest page',
+    r.j.event.photoShape === 'arch' && r.j.event.cardAlign === 'left' && !!r.j.event.photoUpdatedAt,
+    JSON.stringify([r.j.event.photoShape, r.j.event.cardAlign, r.j.event.photoUpdatedAt]));
+
+  raw = await fetch(API + '/api/invite/' + a.token + '/photo');
+  ok('a guest can load the photo with only their token',
+    raw.ok && raw.headers.get('content-type') === 'image/png', raw.status + ' ' + raw.headers.get('content-type'));
+  ok('a bad token cannot', !(await fetch(API + '/api/invite/nope/photo')).ok);
+  ok('the design reaches the guest page',
+    r.j.event.photoShape === 'arch' && r.j.event.cardAlign === 'left' && !!r.j.event.photoUpdatedAt,
+    JSON.stringify([r.j.event.photoShape, r.j.event.cardAlign, r.j.event.photoUpdatedAt]));
+
+  raw = await fetch(API + '/api/invite/' + a.token + '/photo');
+  ok('a guest can load the photo with only their token',
+    raw.ok && raw.headers.get('content-type') === 'image/png', raw.status + ' ' + raw.headers.get('content-type'));
+  ok('a bad token cannot',
+    !(await fetch(API + '/api/invite/nope/photo')).ok);
 
   console.log('\n== guest confirms ==');
   r = await call('/api/invite/' + a.token, { admin: false, method: 'POST', body: { attending: true, message: 'Happy birthday Aby!' } });
@@ -239,6 +312,16 @@ async function main() {
     (await call('/api/events/evt_nope/slots', { method: 'DELETE' })).status === 404);
   ok('clearing an already empty event is harmless',
     (await call('/api/events/' + eventId + '/slots', { method: 'DELETE' })).j.removed === 0);
+
+  console.log('\n== removing the photo ==');
+  ok('the photo can be removed',
+    (await call('/api/events/' + eventId + '/photo', { method: 'DELETE' })).status === 200);
+  ok('it is gone afterwards',
+    (await call('/api/events/' + eventId + '/photo')).status === 404);
+  r = await call('/api/events');
+  ok('the stamp is cleared too',
+    !r.j.events.find((e) => e.id === eventId).photoUpdatedAt,
+    JSON.stringify(r.j.events.find((e) => e.id === eventId).photoUpdatedAt));
 
   console.log('\n== export ==');
   r = await call('/api/export');

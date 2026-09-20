@@ -88,7 +88,24 @@
   .chip.active { border-color: var(--gold); color: var(--gold); background: var(--accent-soft); }
 
   /* ---- themes ---- */
-  #themeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); gap: 12px; }
+  .theme-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); gap: 12px; }
+  .theme-group {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold-dim); font-weight: 700; margin: 20px 0 8px;
+  }
+  .theme-group:first-child { margin-top: 0; }
+
+  /* ---- photo ---- */
+  .photo-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .photo-preview {
+    width: 96px; height: 96px; border-radius: 12px; overflow: hidden; flex: none;
+    border: 1px dashed var(--line-soft); background: var(--ink-2);
+    display: grid; place-items: center; color: var(--faint); font-size: 11px; text-align: center;
+  }
+  .photo-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .photo-preview.has img { display: block; }
+  .photo-preview.has span { display: none; }
+  input[type="color"] { max-width: 70px; padding: 4px; height: 42px; }
   .theme-card {
     padding: 0; overflow: hidden; text-align: left; cursor: pointer;
     border: 1px solid var(--line-soft); border-radius: var(--radius);
@@ -231,9 +248,56 @@
 
     <!-- 3. THEME -->
     <section class="block">
-      <h2><span class="step">3</span> Theme</h2>
-      <p class="hint">This is how the invitation looks to your guests. This console follows the same theme, so what you see here is what they get.</p>
+      <h2><span class="step">3</span> Invitation Design</h2>
+      <p class="hint">This is how the invitation looks to your guests. Everything here saves the moment you change it, and this console follows the same theme so you can see it as you go.</p>
       <div id="themeGrid"></div>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="grid-2">
+          <div>
+            <label>Photo</label>
+            <div class="photo-row">
+              <div class="photo-preview" id="photoPreview">
+                <span>No photo</span><img id="photoImg" alt="" />
+              </div>
+              <div class="row">
+                <input type="file" id="photoInput" accept="image/*" style="display:none" />
+                <button class="tiny" type="button" id="photoPick">Upload photo</button>
+                <button class="tiny danger hidden" type="button" id="photoRemove">Remove</button>
+              </div>
+            </div>
+            <p class="tiny-text muted" style="margin:10px 0 0">
+              JPEG, PNG or WebP. It is resized to 900px on your phone before it is sent,
+              so a large photo is fine.
+            </p>
+          </div>
+
+          <div class="grid-2" style="align-content:start">
+            <div class="field"><label for="dz-photoShape">Photo shape</label><select id="dz-photoShape"><option value="circle">Circle</option><option value="rounded">Rounded</option><option value="square">Square</option><option value="arch">Arch</option></select></div>
+            <div class="field"><label for="dz-photoSize">Photo size</label><select id="dz-photoSize"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></div>
+            <div class="field"><label for="dz-borderStyle">Border</label><select id="dz-borderStyle"><option value="none">None</option><option value="thin">Thin</option><option value="double">Double frame</option><option value="dashed">Dashed</option></select></div>
+            <div class="field"><label for="dz-cardCorners">Corners</label><select id="dz-cardCorners"><option value="sharp">Sharp</option><option value="soft">Soft</option><option value="round">Round</option></select></div>
+            <div class="field"><label for="dz-cardAlign">Alignment</label><select id="dz-cardAlign"><option value="center">Centered</option><option value="left">Left</option></select></div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:18px">
+          <div class="field">
+            <label for="dz-accentColor">Accent colour</label>
+            <div class="row">
+              <input type="color" id="dz-accentColor" />
+              <button class="tiny ghost" type="button" data-clear="accentColor">Use the theme</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="dz-borderColor">Border colour</label>
+            <div class="row">
+              <input type="color" id="dz-borderColor" />
+              <button class="tiny ghost" type="button" data-clear="borderColor">Use the theme</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 4. SLOTS -->

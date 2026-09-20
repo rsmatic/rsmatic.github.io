@@ -98,6 +98,88 @@
   --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
 }
 
+/* ---- occasion themes ---- */
+
+[data-theme='kids-carnival'] {
+  color-scheme: light;
+  --ink: #fffaf0; --ink-2: #ffeed2; --panel-solid: #ffffff;
+  --gold: #e8532e; --rose: #1f8fd6;
+  --text: #2b2118; --dim: #6f5f4e; --faint: #a08f7c; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='kids-pastel'] {
+  color-scheme: light;
+  --ink: #f6fbf8; --ink-2: #e4f2ea; --panel-solid: #ffffff;
+  --gold: #3f9c7c; --rose: #f0907f;
+  --text: #26332c; --dim: #5f7268; --faint: #93a69b; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='debut-rose'] {
+  color-scheme: dark;
+  --ink: #1b0d14; --ink-2: #28131d; --panel-solid: #2d1622;
+  --gold: #f0c987; --rose: #f2a0c0;
+  --text: #fbe9f0; --dim: #bf96a8; --faint: #7d5c6c; --on-accent: #1b0d14;
+  --ok: #7fd6ab; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='debut-pearl'] {
+  color-scheme: light;
+  --ink: #fbfaf8; --ink-2: #eeece8; --panel-solid: #ffffff;
+  --gold: #8a7d6b; --rose: #c9a9b5;
+  --text: #2d2a26; --dim: #6b6459; --faint: #9b948a; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='anniversary-gold'] {
+  color-scheme: dark;
+  --ink: #0a1018; --ink-2: #111a26; --panel-solid: #14202e;
+  --gold: #e5c15f; --rose: #c9a24a;
+  --text: #eef3f8; --dim: #97a5b5; --faint: #5d6a79; --on-accent: #0a1018;
+  --ok: #7fd6ab; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='anniversary-silver'] {
+  color-scheme: light;
+  --ink: #f7f8fa; --ink-2: #e8ebf0; --panel-solid: #ffffff;
+  --gold: #5b6b7d; --rose: #94a3b4;
+  --text: #262c33; --dim: #5c6772; --faint: #8d959e; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='christmas-classic'] {
+  color-scheme: dark;
+  --ink: #0c1a12; --ink-2: #12271a; --panel-solid: #153020;
+  --gold: #e3c069; --rose: #e06767;
+  --text: #eaf4ed; --dim: #93ae9d; --faint: #57705f; --on-accent: #0c1a12;
+  --ok: #7fd6ab; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='christmas-frost'] {
+  color-scheme: light;
+  --ink: #f4f9fd; --ink-2: #e2edf7; --panel-solid: #ffffff;
+  --gold: #2f6ea8; --rose: #7fb4d9;
+  --text: #1f2c38; --dim: #556777; --faint: #8ba0b0; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='christening'] {
+  color-scheme: light;
+  --ink: #fbfaf5; --ink-2: #edf0e8; --panel-solid: #ffffff;
+  --gold: #7a9ab5; --rose: #cbb89b;
+  --text: #2b2f33; --dim: #61696f; --faint: #959ba0; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='fiesta'] {
+  color-scheme: dark;
+  --ink: #1a0f1c; --ink-2: #26162a; --panel-solid: #2b1930;
+  --gold: #ffab4a; --rose: #ff6fae;
+  --text: #fdeef5; --dim: #bb98ac; --faint: #7a5f71; --on-accent: #1a0f1c;
+  --ok: #6fd4cd; --no: #ff7b7b; --wait: #ffc94a; --open: #8ab4d8;
+}
+
 /* ---- everything below is mixed out of the tokens above ---- */
 
 :root {
@@ -112,6 +194,9 @@
   --no-soft: color-mix(in srgb, var(--no) 12%, transparent);
   --wait-soft: color-mix(in srgb, var(--wait) 13%, transparent);
   --open-soft: color-mix(in srgb, var(--open) 13%, transparent);
+
+  /* The invitation frame. A custom border colour overrides this on :root. */
+  --frame: var(--line);
 
   --radius: 14px;
   --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;

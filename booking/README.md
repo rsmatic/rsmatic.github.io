@@ -111,11 +111,16 @@ https://rsmatic.github.io/booking/i.html?t=8Kd2mPqR4xVnT
 
 ### Tema
 
-Sampu ang pagpipilian, naka-save sa event kaya bawat event ay may sarili nitong hitsura:
+Dalawampu ang pagpipilian, naka-save sa event kaya bawat event ay may sarili nitong hitsura:
 
-| Madilim | Maliwanag |
+| Grupo | Mga tema |
 |---|---|
-| `rose-gold` (default), `midnight`, `emerald`, `burgundy`, `noir`, `tropical` | `ivory`, `blush`, `sage`, `lavender` |
+| Classic | `rose-gold` (default), `midnight`, `emerald`, `burgundy`, `noir`, `tropical`, `ivory`, `blush`, `sage`, `lavender` |
+| Kids | `kids-carnival`, `kids-pastel` |
+| Debut | `debut-rose`, `debut-pearl` |
+| Anniversary | `anniversary-gold`, `anniversary-silver` |
+| Christmas | `christmas-classic`, `christmas-frost` |
+| Iba pang okasyon | `christening`, `fiesta` |
 
 Ang bawat tema ay nagtatakda ng 13 token lang (`--ink`, `--gold`, `--text`, `--ok`, …) sa
 [`app/styles.css`](app/styles.css). Ang lahat ng panel tint, border at hover ay
@@ -138,6 +143,31 @@ Sa **Step 2 — Event Details** may *Age on the invitation* na tatlo ang pagpipi
 
 Hanggang 40 karakter ang sariling wording, at mas maliit ang font nito kaysa sa numero
 para kasya ang salita sa cellphone.
+
+### Litrato at hitsura ng card
+
+Sa **Step 3 — Invitation Design**, lahat ay nase-save agad sa oras na baguhin mo — walang
+Save na pipindutin, at sumusunod ang admin console mismo bilang preview.
+
+| Kontrol | Pagpipilian |
+|---|---|
+| Photo shape | Circle, Rounded, Square, Arch |
+| Photo size | Small, Medium, Large |
+| Border | None, Thin, Double frame, Dashed |
+| Corners | Sharp, Soft, Round |
+| Alignment | Centered, Left |
+| Accent colour | kahit anong `#rrggbb`, o *Use the theme* |
+| Border colour | kahit anong `#rrggbb`, o *Use the theme* |
+
+**Ang litrato.** Nire-resize ito sa 900px sa browser mo bago ipadala, kaya pwede kang
+mag-upload ng malaking litrato mula sa cellphone. Naka-imbak ito bilang base64 sa sarili
+nitong table (`event_photos`), hindi kasama sa events — kaya hindi ito
+kasama sa 15-segundong poll ng admin.
+
+JPEG, PNG at WebP lang ang tinatanggap, at may limitasyong mga 450 KB pagkatapos ng resize.
+Kinukuha ito ng bisita sa `/api/invite/<token>/photo` — nakasandal sa token nila,
+hindi sa event id — at may `?v=<updatedAt>` kaya pwedeng i-cache nang matagal
+nang hindi naluluma.
 
 ### Link ng mapa
 
@@ -171,6 +201,7 @@ Laban sa production database:
 ```bash
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0001-theme-and-map.sql --config worker/wrangler.toml
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0002-age-label.sql --config worker/wrangler.toml
+npx wrangler d1 execute aby41 --remote --file=worker/migrations/0003-design-and-photo.sql --config worker/wrangler.toml
 ```
 
 Para sa bagong database, sapat na ang `schema.sql` — nandoon na ang lahat ng column.
@@ -231,7 +262,7 @@ booking/
 ├── i.html                Page ng bisita         ← /booking/i.html?t=TOKEN
 ├── app/
 │   ├── config.js         URL ng API (ito lang ang binabago pagka-deploy)
-│   ├── themes.js         Ang sampung tema na makikita sa picker
+│   ├── themes.js         Ang dalawampung tema na makikita sa picker
 │   ├── admin.js
 │   ├── invite.js
 │   └── styles.css
@@ -248,7 +279,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            62 API checks laban sa tumatakbong server
+    ├── e2e.js            86 API checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 
@@ -270,6 +301,9 @@ Kailangan ng header na `x-admin-key` ang mga admin endpoint. Ang guest endpoint 
 | `DELETE` | `/api/events/:id` | Burahin ang event at mga slot nito |
 | `POST` | `/api/events/:id/slots` | Gumawa ng slots — `{ table, count, startAt }` |
 | `DELETE` | `/api/events/:id/slots` | Burahin ang LAHAT ng upuan ng event (mananatili ang event) |
+| `PUT` | `/api/events/:id/photo` | Mag-upload — `{ dataUrl }` |
+| `GET` | `/api/events/:id/photo` | Ang litrato (admin preview) |
+| `DELETE` | `/api/events/:id/photo` | Alisin ang litrato |
 | `PATCH` | `/api/slots/:id` | Pangalan, contact, mesa, upuan |
 | `POST` | `/api/slots/:id/token` | Bagong link (pinapatay ang luma) |
 | `POST` | `/api/slots/:id/reset` | Burahin ang sagot ng bisita |
@@ -277,6 +311,7 @@ Kailangan ng header na `x-admin-key` ang mga admin endpoint. Ang guest endpoint 
 | `GET` | `/api/export` | Buong database bilang JSON |
 | `GET` | `/api/invite/:token` | Detalye ng imbitasyon (pampubliko) |
 | `POST` | `/api/invite/:token` | Sagot — `{ attending, reason, message }` |
+| `GET` | `/api/invite/:token/photo` | Ang litrato (pampubliko, nakasandal sa token) |
 
 ---
 
