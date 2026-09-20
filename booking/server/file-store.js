@@ -73,6 +73,12 @@ export const fileStore = {
     return data.events.find((e) => e.id === id) || null;
   },
 
+  async getEventByCoordinatorKey(key) {
+    if (!key) return null;
+    const data = await readFile();
+    return data.events.find((e) => e.coordinatorKey && e.coordinatorKey === key) || null;
+  },
+
   async createEvent(event) {
     await transaction((data) => { data.events.push(event); });
     return event;

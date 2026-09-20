@@ -37,6 +37,7 @@ const MIME = {
 function resolveStatic(pathname) {
   if (pathname === '/' || pathname === '/index.html') return 'index.html';
   if (pathname === '/i.html') return 'i.html';
+  if (pathname === '/c.html') return 'c.html';
   if (/^\/app\/[A-Za-z0-9._-]+$/.test(pathname)) return pathname.slice(1);
   return null;
 }
@@ -84,6 +85,7 @@ const server = http.createServer(async (req, res) => {
         segments: pathname.split('/').filter(Boolean),
         body: await readBody(req),
         adminKey: req.headers['x-admin-key'] || url.searchParams.get('key') || '',
+        coordinatorKey: req.headers['x-coordinator-key'] || url.searchParams.get('ckey') || '',
       });
       if (result.binary) {
         const bytes = Buffer.from(result.binary.base64, 'base64');

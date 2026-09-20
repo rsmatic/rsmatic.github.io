@@ -28,7 +28,7 @@ const EVENT_COLUMNS = ['id', 'title', 'celebrant', 'nickname', 'birthDate', 'eve
   'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
   'theme', 'ageDisplay', 'ageLabel',
   'photoShape', 'photoSize', 'borderStyle', 'cardCorners', 'cardAlign',
-  'accentColor', 'borderColor', 'photoUpdatedAt', 'createdAt'];
+  'accentColor', 'borderColor', 'photoUpdatedAt', 'coordinatorKey', 'createdAt'];
 
 const slotFromRow = (row) => (row ? {
   id: row.id,
@@ -87,6 +87,13 @@ export function createD1Store(d1) {
 
     async getEvent(id) {
       return eventFromRow(await d1.prepare('SELECT * FROM events WHERE id = ?').bind(id).first());
+    },
+
+    async getEventByCoordinatorKey(key) {
+      if (!key) return null;
+      return eventFromRow(await d1.prepare(
+        "SELECT * FROM events WHERE coordinatorKey = ? AND coordinatorKey != ''",
+      ).bind(key).first());
     },
 
     async createEvent(event) {

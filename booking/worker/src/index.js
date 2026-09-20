@@ -21,7 +21,7 @@ function corsHeaders(request, env) {
     // Every method the pages use. A missing one is invisible to curl and
     // fatal in a browser: the preflight simply refuses the request.
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, x-admin-key',
+    'Access-Control-Allow-Headers': 'Content-Type, x-admin-key, x-coordinator-key',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -98,6 +98,7 @@ export default {
         segments: pathname.split('/').filter(Boolean),
         body,
         adminKey: request.headers.get('x-admin-key') || url.searchParams.get('key') || '',
+        coordinatorKey: request.headers.get('x-coordinator-key') || url.searchParams.get('ckey') || '',
       });
       if (result.binary) return image(result.binary, cors);
       return json(result.data, result.status, cors);

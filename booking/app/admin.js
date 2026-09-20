@@ -23,33 +23,14 @@
 
   /* ------------------------------------------------------------- helpers */
 
-  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
-    'August', 'September', 'October', 'November', 'December'];
-  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-  function formatDate(iso) {
-    if (!iso) return '';
-    var parts = iso.split('-');
-    if (parts.length !== 3) return iso;
-    var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    if (isNaN(d.getTime())) return iso;
-    return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + ' (' + DAYS[d.getDay()] + ')';
-  }
-
-  function formatTime(hhmm) {
-    if (!hhmm) return '';
-    var bits = hhmm.split(':');
-    var h = Number(bits[0]);
-    var suffix = h >= 12 ? 'PM' : 'AM';
-    var h12 = h % 12 === 0 ? 12 : h % 12;
-    return h12 + ':' + (bits[1] || '00') + ' ' + suffix;
-  }
-
-  function escapeHtml(value) {
-    return String(value == null ? '' : value)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  /* Formatting, sorting and the seat rows themselves live in app/board.js,
+     shared with the coordinator page so the two boards stay identical. */
+  var B = window.AbyBoard;
+  var escapeHtml = B.escapeHtml;
+  var formatDate = B.formatDate;
+  var formatTime = B.formatTime;
+  var compareSlots = B.compareSlots;
+  var copy = B.copyText;
 
   var toastTimer;
   function toast(message, isError) {
@@ -116,19 +97,6 @@
     if (note) note.textContent = apiBase() || window.location.origin + '  (same origin)';
   }
 
-  function copy(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      return navigator.clipboard.writeText(text);
-    }
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); } finally { document.body.removeChild(ta); }
-    return Promise.resolve();
-  }
 
   function currentEvent() {
     for (var i = 0; i < state.events.length; i += 1) {
@@ -138,23 +106,7 @@
   }
 
   function inviteMessage(slot) {
-    var ev = currentEvent();
-    if (!ev) return inviteLink(slot);
-    var who = slot.guestName || 'Friend';
-    var when = formatDate(ev.eventDate) + (ev.startTime ? ', ' + formatTime(ev.startTime) : '');
-    var lines = [
-      'Hi ' + who + '!',
-      '',
-      'You are invited to ' + ev.title + (ev.celebrant ? ' for ' + ev.celebrant : '') + '.',
-      'Date: ' + when,
-    ];
-    if (ev.venue) lines.push('Venue: ' + ev.venue);
-    if (ev.dressCode) lines.push('Dress code: ' + ev.dressCode);
-    lines.push('Reserved for you: ' + slot.label);
-    lines.push('');
-    lines.push('Please let us know here if you can make it:');
-    lines.push(inviteLink(slot));
-    return lines.join('\n');
+    return B.inviteMessage(currentEvent(), slot, inviteLink(slot));
   }
 
   /* --------------------------------------------------------------- gate */
@@ -216,6 +168,7 @@
     if (!ev) return;
     renderThemes(ev);
     renderDesign(ev);
+    renderCoordinator(ev);
     fillDetailForm(ev);
     refreshLinkNotes();
     renderStats();
@@ -397,6 +350,30 @@
     });
   }
 
+  /* ---- coordinator access ---- */
+
+  function coordinatorPageUrl() {
+    return baseUrl() + 'c.html';
+  }
+
+  function renderCoordinator(ev) {
+    var has = Boolean(ev.coordinatorKey);
+    $('coordNone').classList.toggle('hidden', has);
+    $('coordHas').classList.toggle('hidden', !has);
+    if (!has) return;
+    $('coordKey').value = ev.coordinatorKey;
+    $('coordLink').value = coordinatorPageUrl();
+  }
+
+  function issueCoordinatorKey(message) {
+    var ev = currentEvent();
+    if (!ev) return;
+    api('/events/' + ev.id + '/coordinator', { method: 'POST' })
+      .then(load)
+      .then(function () { toast(message); })
+      .catch(fail);
+  }
+
   function fillDetailForm(ev) {
     if (state.detailDirty) return;
     var map = {
@@ -414,16 +391,6 @@
     $('detailSummary').textContent = ev.title + ' — ' + formatDate(ev.eventDate);
   }
 
-  /* Seats are stored as text, so "10" sorts before "2" unless we compare them
-     the way a person reads them. Numeric collation also keeps "Table 10"
-     after "Table 9". */
-  var collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-
-  function compareSlots(a, b) {
-    return collator.compare(a.table || '', b.table || '') ||
-      collator.compare(a.seat || '', b.seat || '');
-  }
-
   function eventSlots() {
     return state.slots
       .filter(function (s) { return s.eventId === state.eventId; })
@@ -431,25 +398,8 @@
   }
 
   function renderStats() {
-    var slots = eventSlots();
-    var by = function (status) {
-      return slots.filter(function (s) { return s.status === status; }).length;
-    };
-    var cards = [
-      { k: 'Total seats', n: slots.length, cls: '' },
-      { k: 'Confirmed', n: by('confirmed'), cls: 'ok' },
-      { k: 'Awaiting reply', n: by('invited'), cls: 'wait' },
-      { k: 'Not coming', n: by('declined'), cls: 'no' },
-      { k: 'Open', n: by('open'), cls: 'open' },
-    ];
-    $('stats').innerHTML = cards.map(function (c) {
-      return '<div class="stat ' + c.cls + '"><div class="n">' + c.n + '</div><div class="k">' + c.k + '</div></div>';
-    }).join('');
+    B.renderStats($('stats'), eventSlots());
   }
-
-  var STATUS_LABEL = {
-    open: 'Open', invited: 'Awaiting reply', confirmed: 'Confirmed', declined: 'Not coming',
-  };
 
   function renderSlots() {
     var host = $('slotList');
@@ -464,90 +414,27 @@
     $('emptySlots').classList.toggle('hidden', all.length > 0);
     $('deleteAllSlotsBtn').classList.toggle('hidden', all.length === 0);
 
-    if (!slots.length) {
-      host.innerHTML = all.length
-        ? '<p class="muted small">Nothing matches this filter.</p>'
-        : '';
-      return;
-    }
-
-    host.innerHTML = slots.map(function (s) {
-      var note = '';
-      if (s.status === 'declined') {
-        note = '<div class="note declined"><b>Reason:</b> ' + escapeHtml(s.reason || '—') +
-          '<br><b>Answered:</b> ' + escapeHtml(new Date(s.respondedAt).toLocaleString()) + '</div>';
-      } else if (s.status === 'confirmed') {
-        note = '<div class="note confirmed"><b>Seat locked.</b> Answered on ' +
-          escapeHtml(new Date(s.respondedAt).toLocaleString()) +
-          (s.message ? '<br><b>Message:</b> ' + escapeHtml(s.message) : '') + '</div>';
-      }
-      return '<div class="slot ' + s.status + '" data-slot="' + escapeHtml(s.id) + '">' +
-        '<div class="seat">' + escapeHtml(s.seat) + '<small>' + escapeHtml(s.table) + '</small></div>' +
-        '<div><input data-field="guestName" placeholder="Guest name" value="' + escapeHtml(s.guestName) + '" /></div>' +
-        '<div><input data-field="guestContact" placeholder="Viber / FB (optional)" value="' + escapeHtml(s.guestContact || '') + '" /></div>' +
-        '<div class="actions">' +
-          '<span class="badge ' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' +
-          '<button class="tiny" data-act="link" type="button" ' + (s.guestName ? '' : 'disabled') + '>Copy link</button>' +
-          '<button class="tiny" data-act="msg" type="button" ' + (s.guestName ? '' : 'disabled') + '>Message</button>' +
-          '<button class="tiny ghost" data-act="share" type="button" ' + (s.guestName ? '' : 'disabled') + '>Share</button>' +
-          '<button class="tiny ghost" data-act="reset" type="button" ' + (s.respondedAt ? '' : 'disabled') + '>Reset</button>' +
-          '<button class="tiny ghost" data-act="token" type="button">New link</button>' +
-          '<button class="tiny danger" data-act="del" type="button">Remove</button>' +
-        '</div>' + note +
-      '</div>';
-    }).join('');
-
-    Array.prototype.forEach.call(host.querySelectorAll('.slot'), wireSlot);
-  }
-
-  function findSlot(id) {
-    for (var i = 0; i < state.slots.length; i += 1) {
-      if (state.slots[i].id === id) return state.slots[i];
-    }
-    return null;
-  }
-
-  function wireSlot(row) {
-    var id = row.getAttribute('data-slot');
-
-    Array.prototype.forEach.call(row.querySelectorAll('[data-field]'), function (input) {
-      input.addEventListener('change', function () {
-        var body = {};
-        body[input.getAttribute('data-field')] = input.value;
-        api('/slots/' + id, { method: 'PATCH', body: body })
-          .then(function () { return load(); })
-          .then(function () { toast('Saved.'); })
-          .catch(fail);
-      });
-    });
-
-    Array.prototype.forEach.call(row.querySelectorAll('[data-act]'), function (btn) {
-      btn.addEventListener('click', function () {
-        var act = btn.getAttribute('data-act');
-        var slot = findSlot(id);
-        if (!slot) return;
-
-        if (act === 'link') {
-          copy(inviteLink(slot)).then(function () { toast('Link copied.'); });
-        } else if (act === 'msg') {
-          copy(inviteMessage(slot)).then(function () { toast('Full message copied — paste it into Messenger or Viber.'); });
-        } else if (act === 'share') {
-          if (navigator.share) {
-            navigator.share({ title: 'Imbitasyon', text: inviteMessage(slot) }).catch(function () {});
-          } else {
-            copy(inviteMessage(slot)).then(function () { toast('Sharing is not available here — the message was copied instead.'); });
-          }
-        } else if (act === 'reset') {
-          if (!confirm('Reset the answer from ' + (slot.guestName || 'this guest') + '? Their confirmation will be erased.')) return;
-          api('/slots/' + id + '/reset', { method: 'POST' }).then(load).then(function () { toast('Answer reset.'); }).catch(fail);
-        } else if (act === 'token') {
-          if (!confirm('This makes a new link. The old link you already sent will stop working. Continue?')) return;
-          api('/slots/' + id + '/token', { method: 'POST' }).then(load).then(function () { toast('The seat has a new link.'); }).catch(fail);
-        } else if (act === 'del') {
-          if (!confirm('Remove ' + slot.label + '?')) return;
-          api('/slots/' + id, { method: 'DELETE' }).then(load).then(function () { toast('Removed.'); }).catch(fail);
-        }
-      });
+    B.renderSlots({
+      host: host,
+      slots: slots,
+      emptyText: all.length ? 'Nothing matches this filter.' : '',
+      allowRemove: true,
+      link: inviteLink,
+      message: inviteMessage,
+      save: function (id, patch) {
+        return api('/slots/' + id, { method: 'PATCH', body: patch }).then(load);
+      },
+      reset: function (id) {
+        return api('/slots/' + id + '/reset', { method: 'POST' }).then(load);
+      },
+      newLink: function (id) {
+        return api('/slots/' + id + '/token', { method: 'POST' }).then(load);
+      },
+      remove: function (slot) {
+        return api('/slots/' + slot.id, { method: 'DELETE' }).then(load);
+      },
+      done: function (message) { toast(message); },
+      error: fail,
     });
   }
 
@@ -673,6 +560,46 @@
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-clear]'), function (btn) {
     btn.addEventListener('click', function () { saveDesign(btn.getAttribute('data-clear'), ''); });
+  });
+
+  $('coordCreate').addEventListener('click', function () {
+    issueCoordinatorKey('Coordinator key created.');
+  });
+
+  $('coordRotate').addEventListener('click', function () {
+    if (!confirm('Replace the coordinator key? Whoever is using the old one will be signed out.')) return;
+    issueCoordinatorKey('New coordinator key issued.');
+  });
+
+  $('coordRevoke').addEventListener('click', function () {
+    var ev = currentEvent();
+    if (!ev) return;
+    if (!confirm('Revoke coordinator access? The page will stop working for them.')) return;
+    api('/events/' + ev.id + '/coordinator', { method: 'DELETE' })
+      .then(load)
+      .then(function () { toast('Coordinator access revoked.'); })
+      .catch(fail);
+  });
+
+  $('coordCopyKey').addEventListener('click', function () {
+    copy($('coordKey').value).then(function () { toast('Key copied.'); });
+  });
+
+  $('coordCopyLink').addEventListener('click', function () {
+    copy($('coordLink').value).then(function () { toast('Page link copied.'); });
+  });
+
+  $('coordCopyBoth').addEventListener('click', function () {
+    var ev = currentEvent();
+    var text = [
+      'Here is your coordinator access for ' + (ev ? ev.title : 'the event') + '.',
+      '',
+      'Page: ' + $('coordLink').value,
+      'Key:  ' + $('coordKey').value,
+      '',
+      'Please keep the key to yourself.',
+    ].join('\n');
+    copy(text).then(function () { toast('Message copied — paste it to your coordinator.'); });
   });
 
   $('photoPick').addEventListener('click', function () { $('photoInput').click(); });

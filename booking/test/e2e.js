@@ -21,7 +21,8 @@ function ok(label, cond, extra = '') {
 
 async function call(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (opts.admin !== false) headers['x-admin-key'] = KEY;
+  if (opts.coordinator) headers['x-coordinator-key'] = opts.coordinator;
+  else if (opts.admin !== false) headers['x-admin-key'] = KEY;
   const res = await fetch(API + path, {
     method: opts.method || 'GET',
     headers,
@@ -84,7 +85,7 @@ async function checkCorsCoversTheApp() {
   const { dirname, join } = await import('node:path');
   const here = dirname(fileURLToPath(import.meta.url));
 
-  const source = ['admin.js', 'invite.js']
+  const source = ['admin.js', 'invite.js', 'coordinator.js', 'board.js']
     .map((f) => readFileSync(join(here, '..', 'app', f), 'utf8')).join('\n');
   const used = new Set(['GET', ...[...source.matchAll(/method:\s*'([A-Z]+)'/g)].map((m) => m[1])]);
 
@@ -363,6 +364,78 @@ async function main() {
     !r.j.events.find((e) => e.id === eventId).photoUpdatedAt,
     JSON.stringify(r.j.events.find((e) => e.id === eventId).photoUpdatedAt));
 
+  console.log('\n== coordinator access ==');
+  // The seats were all removed a moment ago, so give this section its own.
+  await call('/api/events/' + eventId + '/slots', { method: 'POST', body: { table: 'Coord', count: 3 } });
+
+  ok('a coordinator key is refused before one exists',
+    (await call('/api/coordinator/board', { coordinator: 'nothing' })).status === 401);
+  ok('an empty coordinator key is refused',
+    (await call('/api/coordinator/board', { coordinator: ' ' })).status === 401);
+
+  r = await call('/api/events/' + eventId + '/coordinator', { method: 'POST' });
+  ok('the host can issue a key', r.status === 200 && /^[A-Za-z0-9]{4}(-[A-Za-z0-9]{4}){3}$/.test(r.j.coordinatorKey || ''),
+    JSON.stringify(r.j));
+  const ckey = r.j.coordinatorKey;
+
+  r = await call('/api/coordinator/session', { admin: false, method: 'POST', body: { key: ckey } });
+  ok('the key signs in and names its event', r.status === 200 && r.j.eventId === eventId, JSON.stringify(r.j));
+  ok('a wrong key does not',
+    (await call('/api/coordinator/session', { admin: false, method: 'POST', body: { key: 'aaaa-bbbb-cccc-dddd' } })).status === 401);
+
+  r = await call('/api/coordinator/board', { coordinator: ckey });
+  ok('the board lists this event only',
+    r.status === 200 && r.j.event.id === eventId && r.j.slots.every((x) => x.eventId === eventId));
+  ok('the board carries seat tokens so links can be sent',
+    r.j.slots.length > 0 && !!r.j.slots[0].token);
+  ok('the coordinator key is never echoed back',
+    JSON.stringify(r.j).indexOf(ckey) < 0);
+  ok('the event view leaves out the design and the key',
+    !('coordinatorKey' in r.j.event) && !('accentColor' in r.j.event) && !('photoUpdatedAt' in r.j.event),
+    Object.keys(r.j.event).join(','));
+
+  console.log('\n== what a coordinator may do ==');
+  const seat = r.j.slots.find((x) => x.status === 'open') || r.j.slots[0];
+  r = await call('/api/coordinator/slots/' + seat.id, {
+    coordinator: ckey, method: 'PATCH', body: { guestName: 'Tita Baby', guestContact: '0917' },
+  });
+  ok('naming a seat works and marks it invited',
+    r.j.guestName === 'Tita Baby' && r.j.status === 'invited', r.j.status);
+  ok('reissuing a link works',
+    (await call('/api/coordinator/slots/' + seat.id + '/token', { coordinator: ckey, method: 'POST' })).j.token !== seat.token);
+
+  console.log('\n== what a coordinator may not do ==');
+  r = await call('/api/coordinator/slots/' + seat.id, {
+    coordinator: ckey, method: 'PATCH', body: { table: 'Hacked', seat: '999', label: 'Hacked' },
+  });
+  ok('the table, seat and label are ignored',
+    r.j.table !== 'Hacked' && r.j.seat !== '999' && r.j.label !== 'Hacked',
+    [r.j.table, r.j.seat, r.j.label].join(' / '));
+  ok('cannot read the admin event list',
+    (await call('/api/events', { coordinator: ckey, admin: false })).status === 401);
+  ok('cannot change the event',
+    (await call('/api/events/' + eventId, { coordinator: ckey, admin: false, method: 'PATCH', body: { title: 'Nope' } })).status === 401);
+  ok('cannot delete a seat',
+    (await call('/api/coordinator/slots/' + seat.id, { coordinator: ckey, method: 'DELETE' })).status === 405);
+  ok('cannot create seats',
+    (await call('/api/events/' + eventId + '/slots', { coordinator: ckey, admin: false, method: 'POST', body: { count: 1 } })).status === 401);
+  ok('cannot issue itself a new key',
+    (await call('/api/events/' + eventId + '/coordinator', { coordinator: ckey, admin: false, method: 'POST' })).status === 401);
+
+  const other = await call('/api/events', { method: 'POST', body: { title: 'Someone else', eventDate: '2026-12-01' } });
+  const otherSlots = await call('/api/events/' + other.j.id + '/slots', { method: 'POST', body: { table: 'T', count: 1 } });
+  ok('cannot touch a seat from another event',
+    (await call('/api/coordinator/slots/' + otherSlots.j.created[0].id, { coordinator: ckey, method: 'PATCH', body: { guestName: 'x' } })).status === 404);
+  await call('/api/events/' + other.j.id, { method: 'DELETE' });
+
+  console.log('\n== revoking ==');
+  r = await call('/api/events/' + eventId + '/coordinator', { method: 'POST' });
+  ok('a replacement key retires the old one',
+    (await call('/api/coordinator/board', { coordinator: ckey })).status === 401);
+  const ckey2 = r.j.coordinatorKey;
+  ok('the replacement works', (await call('/api/coordinator/board', { coordinator: ckey2 })).status === 200);
+  await call('/api/events/' + eventId + '/coordinator', { method: 'DELETE' });
+  ok('revoking closes the door', (await call('/api/coordinator/board', { coordinator: ckey2 })).status === 401);
   console.log('\n== export ==');
   r = await call('/api/export');
   ok('export returns events + slots', Array.isArray(r.j.events) && Array.isArray(r.j.slots));

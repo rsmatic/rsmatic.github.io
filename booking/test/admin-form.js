@@ -171,6 +171,7 @@ sandbox.window.ABY_CONFIG = { api: 'https://api.example' };
 
 const context = vm.createContext(sandbox);
 vm.runInContext(readFileSync(join(APP, 'themes.js'), 'utf8'), context, { filename: 'themes.js' });
+vm.runInContext(readFileSync(join(APP, 'board.js'), 'utf8'), context, { filename: 'board.js' });
 vm.runInContext(readFileSync(join(APP, 'admin.js'), 'utf8'), context, { filename: 'admin.js' });
 
 const reload = () => { fire(byId('refreshBtn'), 'click'); return flush().then(flush); };

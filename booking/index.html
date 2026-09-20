@@ -330,9 +330,39 @@
       </div>
     </section>
 
-    <!-- 5. BOARD -->
+    <!-- 5. COORDINATOR -->
     <section class="block">
-      <h2><span class="step">6</span> Seat Board</h2>
+      <h2><span class="step">6</span> Coordinator Access</h2>
+      <p class="hint">A second key for whoever is helping you. It opens a page with the guest list only — they can name seats, send invitations, reissue a link and undo an answer, but they cannot change the event, the design, the seating plan, or this key.</p>
+      <div class="panel">
+        <div id="coordNone">
+          <p class="small muted" style="margin:0 0 12px">No coordinator key yet.</p>
+          <button class="primary" type="button" id="coordCreate">Create a coordinator key</button>
+        </div>
+
+        <div id="coordHas" class="hidden">
+          <div class="field">
+            <label for="coordKey">Coordinator key</label>
+            <input id="coordKey" readonly />
+          </div>
+          <div class="field">
+            <label for="coordLink">Page to send them</label>
+            <input id="coordLink" readonly />
+          </div>
+          <div class="row" style="margin-top:14px">
+            <button class="tiny" type="button" id="coordCopyKey">Copy key</button>
+            <button class="tiny" type="button" id="coordCopyLink">Copy page link</button>
+            <button class="tiny" type="button" id="coordCopyBoth">Copy both</button>
+            <button class="tiny ghost" type="button" id="coordRotate">Replace key</button>
+            <button class="tiny danger" type="button" id="coordRevoke">Revoke access</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. BOARD -->
+    <section class="block">
+      <h2><span class="step">7</span> Seat Board</h2>
       <p class="hint">Put a guest's name on a seat, copy the link, and send it over Messenger or Viber. When they confirm, the seat locks itself.</p>
 
       <div id="stats" style="margin-bottom:16px"></div>
@@ -357,6 +387,7 @@
 <div id="toast"></div>
 <script src="app/config.js"></script>
 <script src="app/themes.js"></script>
+<script src="app/board.js"></script>
 <script src="app/admin.js"></script>
 </body>
 </html>

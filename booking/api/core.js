@@ -152,6 +152,51 @@ export function newToken() {
   return s;
 }
 
+/** Grouped so it can be read aloud or retyped without losing your place. */
+export function newCoordinatorKey() {
+  let s = '';
+  for (const b of randomBytes(16)) s += TOKEN_CHARS[b % TOKEN_CHARS.length];
+  return s.slice(0, 4) + '-' + s.slice(4, 8) + '-' + s.slice(8, 12) + '-' + s.slice(12, 16);
+}
+
+/**
+ * What a coordinator sees of the event. Deliberately not the whole row:
+ * no coordinator key, no design, nothing they cannot change anyway.
+ */
+function coordinatorEventView(event) {
+  return {
+    id: event.id,
+    title: event.title,
+    celebrant: event.celebrant,
+    nickname: event.nickname,
+    eventDate: event.eventDate,
+    startTime: event.startTime,
+    venue: event.venue,
+    dressCode: event.dressCode,
+    rsvpDeadline: event.rsvpDeadline,
+    theme: event.theme,
+  };
+}
+
+/** Naming a seat invites someone; clearing it takes the invitation back. */
+function guestNamePatch(slot, body) {
+  const patch = {};
+  if ('guestName' in body) {
+    const name = str(body.guestName);
+    patch.guestName = name;
+    if (!name) {
+      patch.status = 'open';
+      patch.reason = null;
+      patch.message = null;
+      patch.respondedAt = null;
+    } else if (!slot.guestName || slot.status === 'open') {
+      patch.status = 'invited';
+    }
+  }
+  if ('guestContact' in body) patch.guestContact = str(body.guestContact);
+  return patch;
+}
+
 /** What a guest is allowed to see about their own seat. */
 function publicSlotView(slot, event) {
   return {
@@ -198,12 +243,23 @@ function publicSlotView(slot, event) {
  * @param {string} opts.adminKey secret that guards every /api/events and /api/slots route
  * @returns {(req: {method, segments, body, adminKey}) => Promise<{status, data}>}
  */
+async function findByCoordinatorKey(store, value) {
+  const key = str(value);
+  // An empty key must never match an event that simply has none set.
+  if (!key) throw new HttpError(401, 'Wrong coordinator key.');
+  const event = await store.getEventByCoordinatorKey(key);
+  if (!event) throw new HttpError(401, 'Wrong coordinator key.');
+  return event;
+}
+
 export function createApi({ store, adminKey }) {
   function requireAdmin(key) {
     if (!adminKey || key !== adminKey) throw new HttpError(401, 'Wrong admin key.');
   }
 
-  return async function handle({ method, segments, body = {}, adminKey: givenKey = '' }) {
+  return async function handle({
+    method, segments, body = {}, adminKey: givenKey = '', coordinatorKey = '',
+  }) {
     const resource = segments[1];
     const rest = segments.slice(2);
 
@@ -254,6 +310,62 @@ export function createApi({ store, adminKey }) {
       }
 
       throw new HttpError(405, 'Method not allowed.');
+    }
+
+    /* ---- coordinator: its own key, a much smaller door ----------------- */
+    if (resource === 'coordinator') {
+      const action = rest[0];
+
+      if (action === 'session' && method === 'POST') {
+        const event = await findByCoordinatorKey(store, body.key);
+        return { status: 200, data: { eventId: event.id, title: event.title } };
+      }
+
+      const event = await findByCoordinatorKey(store, coordinatorKey);
+
+      if (action === 'board' && method === 'GET') {
+        const all = await store.snapshot();
+        return {
+          status: 200,
+          data: {
+            event: coordinatorEventView(event),
+            slots: all.slots.filter((s) => s.eventId === event.id),
+          },
+        };
+      }
+
+      if (action === 'slots') {
+        const slotId = rest[1];
+        if (!slotId) throw new HttpError(404, 'Missing seat id.');
+        const slot = await store.getSlot(slotId);
+        // A coordinator may only touch seats belonging to their own event.
+        if (!slot || slot.eventId !== event.id) throw new HttpError(404, 'Seat not found.');
+
+        if (rest[2] === 'reset' && method === 'POST') {
+          return {
+            status: 200,
+            data: await store.updateSlot(slotId, {
+              status: slot.guestName ? 'invited' : 'open',
+              reason: null,
+              message: null,
+              respondedAt: null,
+            }),
+          };
+        }
+
+        if (rest[2] === 'token' && method === 'POST') {
+          return { status: 200, data: await store.updateSlot(slotId, { token: newToken() }) };
+        }
+
+        if (!rest[2] && method === 'PATCH') {
+          // Names and contacts only — never the table, seat or label.
+          return { status: 200, data: await store.updateSlot(slotId, guestNamePatch(slot, body)) };
+        }
+
+        throw new HttpError(405, 'Method not allowed.');
+      }
+
+      throw new HttpError(404, 'No such endpoint.');
     }
 
     /* ---- everything below needs the admin key -------------------------- */
@@ -314,6 +426,24 @@ export function createApi({ store, adminKey }) {
         }
         await store.createSlots(made);
         return { status: 201, data: { created: made } };
+      }
+
+      if (eventId && rest[1] === 'coordinator') {
+        const event = await store.getEvent(eventId);
+        if (!event) throw new HttpError(404, 'Event not found.');
+
+        if (method === 'POST') {
+          const key = newCoordinatorKey();
+          await store.updateEvent(eventId, { coordinatorKey: key });
+          return { status: 200, data: { coordinatorKey: key } };
+        }
+
+        if (method === 'DELETE') {
+          await store.updateEvent(eventId, { coordinatorKey: '' });
+          return { status: 200, data: { ok: true } };
+        }
+
+        throw new HttpError(405, 'Method not allowed.');
       }
 
       if (eventId && rest[1] === 'photo') {
@@ -397,22 +527,8 @@ export function createApi({ store, adminKey }) {
       }
 
       if (!rest[1] && method === 'PATCH') {
-        const patch = {};
-
-        if ('guestName' in body) {
-          const name = str(body.guestName);
-          patch.guestName = name;
-          if (!name) {
-            // Seat freed: the previous guest's answer goes with them.
-            patch.status = 'open';
-            patch.reason = null;
-            patch.message = null;
-            patch.respondedAt = null;
-          } else if (!slot.guestName || slot.status === 'open') {
-            patch.status = 'invited';
-          }
-        }
-        if ('guestContact' in body) patch.guestContact = str(body.guestContact);
+        // Same naming rules the coordinator gets, plus the seat's own labelling.
+        const patch = guestNamePatch(slot, body);
         if ('table' in body) patch.table = str(body.table);
         if ('seat' in body) patch.seat = str(body.seat);
         if ('label' in body) patch.label = str(body.label);

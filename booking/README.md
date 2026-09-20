@@ -109,6 +109,26 @@ Ganito ang hugis ng link ng bisita:
 https://rsmatic.github.io/booking/i.html?t=8Kd2mPqR4xVnT
 ```
 
+### Coordinator
+
+Sa **Step 6 — Coordinator Access** pwede kang mag-isyu ng pangalawang susi para sa
+kung sino man ang tumutulong sa iyo. Binubuksan nito ang `/booking/c.html` —
+ang listahan ng bisita lang.
+
+| Kaya ng coordinator | Hindi kaya |
+|---|---|
+| Maglagay ng pangalan at contact sa upuan | Gumawa o magbura ng upuan |
+| Kopyahin ang link at mensahe, mag-share | Baguhin ang mesa, numero ng upuan o label |
+| Gumawa ng bagong link para sa isang upuan | Baguhin o burahin ang event |
+| I-reset ang sagot ng bisita | Galawin ang tema, disenyo o litrato |
+| Makita ang mga sagot at bilang | Makita o palitan ang admin key |
+
+Bawat event ay may sariling susi. Ang **Replace key** ay pinapatay agad ang luma
+(mala-log out ang gumagamit nito), at ang **Revoke access** ay tuluyang isinasara ang pinto.
+Hindi kailanman ibinabalik ng API ang susi sa mismong coordinator — nasa admin page lang ito.
+
+Ang **Copy both** ay gumagawa ng handa nang mensahe na may link at susi, para i-paste sa chat.
+
 ### Tema
 
 Dalawampu ang pagpipilian, naka-save sa event kaya bawat event ay may sarili nitong hitsura:
@@ -202,6 +222,7 @@ Laban sa production database:
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0001-theme-and-map.sql --config worker/wrangler.toml
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0002-age-label.sql --config worker/wrangler.toml
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0003-design-and-photo.sql --config worker/wrangler.toml
+npx wrangler d1 execute aby41 --remote --file=worker/migrations/0004-coordinator.sql --config worker/wrangler.toml
 ```
 
 Para sa bagong database, sapat na ang `schema.sql` — nandoon na ang lahat ng column.
@@ -259,11 +280,14 @@ API=https://aby41-api.rsmatic-dev.workers.dev KEY=ang-key-mo node test/e2e.js
 ```
 booking/
 ├── index.html            Admin console          ← /booking/
+├── c.html                Coordinator page       ← /booking/c.html
 ├── i.html                Page ng bisita         ← /booking/i.html?t=TOKEN
 ├── app/
 │   ├── config.js         URL ng API (ito lang ang binabago pagka-deploy)
 │   ├── themes.js         Ang dalawampung tema na makikita sa picker
+│   ├── board.js          Ang seat board, gamit ng admin at ng coordinator
 │   ├── admin.js
+│   ├── coordinator.js
 │   ├── invite.js
 │   └── styles.css
 ├── api/core.js           Lahat ng logic ng API — iisa para sa Worker at sa Node
@@ -279,7 +303,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            86 API checks laban sa tumatakbong server
+    ├── e2e.js            108 API checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 
@@ -312,6 +336,18 @@ Kailangan ng header na `x-admin-key` ang mga admin endpoint. Ang guest endpoint 
 | `GET` | `/api/invite/:token` | Detalye ng imbitasyon (pampubliko) |
 | `POST` | `/api/invite/:token` | Sagot — `{ attending, reason, message }` |
 | `GET` | `/api/invite/:token/photo` | Ang litrato (pampubliko, nakasandal sa token) |
+
+Para sa coordinator, ang header ay `x-coordinator-key`:
+
+| Method | Path | Para saan |
+|---|---|---|
+| `POST` | `/api/events/:id/coordinator` | (admin) Mag-isyu o magpalit ng susi |
+| `DELETE` | `/api/events/:id/coordinator` | (admin) Bawiin ang access |
+| `POST` | `/api/coordinator/session` | Suriin ang susi — `{ key }` |
+| `GET` | `/api/coordinator/board` | Ang event at mga upuan nito |
+| `PATCH` | `/api/coordinator/slots/:id` | Pangalan at contact lang |
+| `POST` | `/api/coordinator/slots/:id/reset` | Burahin ang sagot |
+| `POST` | `/api/coordinator/slots/:id/token` | Bagong link |
 
 ---
 
