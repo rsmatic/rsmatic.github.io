@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS events (
   rsvpDeadline TEXT,
   hostName     TEXT,
   theme        TEXT,
+  ageDisplay   TEXT,
+  ageLabel     TEXT,
   createdAt    TEXT
 );
 
@@ -41,7 +43,8 @@ CREATE INDEX IF NOT EXISTS idx_slots_token ON slots (token);
 -- Ang event ni Aby, handa na.
 INSERT OR IGNORE INTO events
   (id, title, celebrant, nickname, birthDate, eventDate, startTime, venue, venueMapUrl,
-   dressCode, note, rsvpDeadline, hostName, theme, createdAt)
+   dressCode, note, rsvpDeadline, hostName, theme, ageDisplay, ageLabel, createdAt)
 VALUES
   ('evt_aby41', 'Aby''s 41st Birthday', 'Mary Abegail Matic', 'Aby', '1985-10-25', '2026-10-25',
-   '18:00', '', '', '', '', '2026-10-18', 'Rexter Matic', 'rose-gold', '2026-09-20T00:00:00.000Z');
+   '18:00', '', '', '', '', '2026-10-18', 'Rexter Matic', 'rose-gold', 'number', '',
+   '2026-09-20T00:00:00.000Z');

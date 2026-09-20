@@ -50,8 +50,34 @@ async function checkThemeListsAgree() {
     uiIds.join(',') === THEMES.join(','), uiIds.join(',') + ' vs ' + THEMES.join(','));
 }
 
+/* The invitation used to read "41th Birthday". Pull the ordinal helper out of
+   the page and check the cases that catch a naive implementation. */
+async function checkOrdinals() {
+  const { readFileSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const { dirname, join } = await import('node:path');
+  const here = dirname(fileURLToPath(import.meta.url));
+
+  const src = readFileSync(join(here, '..', 'app', 'invite.js'), 'utf8');
+  const match = src.match(/function ordinal\(n\) \{[\s\S]*?\n {2}\}/);
+  if (!match) throw new Error('ordinal() not found in app/invite.js');
+  const ordinal = new Function('return (' + match[0] + ')')();
+
+  const cases = [[1, '1st'], [2, '2nd'], [3, '3rd'], [4, '4th'], [11, '11th'], [12, '12th'],
+    [13, '13th'], [21, '21st'], [22, '22nd'], [41, '41st'], [100, '100th'], [111, '111th']];
+  const wrong = cases.filter(([n, want]) => ordinal(n) !== want)
+    .map(([n, want]) => n + '->' + ordinal(n) + ' (want ' + want + ')');
+  ok('ordinals read 41st, 22nd, 13th — not 41th', wrong.length === 0, wrong.join(', '));
+}
+
 async function main() {
   console.log('Testing ' + API + '\n');
+
+  console.log('== invitation wording ==');
+  await checkOrdinals().catch((err) => {
+    failed += 1;
+    console.log('  FAIL  could not check ordinals -> ' + err.message);
+  });
 
   console.log('== theme lists ==');
   await checkThemeListsAgree().catch((err) => {
@@ -82,6 +108,22 @@ async function main() {
   r = await call('/api/events/' + eventId, { method: 'PATCH', body: { theme: '' } });
   ok('an empty theme returns to the default', r.j.theme === 'rose-gold', r.j.theme);
   await call('/api/events/' + eventId, { method: 'PATCH', body: { theme: 'emerald' } });
+
+  console.log('\n== age on the invitation ==');
+  r = await call('/api/events/' + eventId);
+  r = await call('/api/events');
+  const fresh = r.j.events.find((e) => e.id === eventId);
+  ok('a new event shows the age by default', fresh.ageDisplay === 'number', fresh.ageDisplay);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { ageDisplay: 'hidden' } });
+  ok('the age can be hidden', r.j.ageDisplay === 'hidden', r.j.ageDisplay);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { ageDisplay: 'custom', ageLabel: 'Fourtis' } });
+  ok('own wording is stored', r.j.ageDisplay === 'custom' && r.j.ageLabel === 'Fourtis',
+    r.j.ageDisplay + ' / ' + r.j.ageLabel);
+  ok('an unknown age display -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { ageDisplay: 'sideways' } })).status === 400);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { ageLabel: 'x'.repeat(80) } });
+  ok('the wording is capped at 40 characters', r.j.ageLabel.length === 40, String(r.j.ageLabel.length));
+  await call('/api/events/' + eventId, { method: 'PATCH', body: { ageDisplay: 'custom', ageLabel: 'Fourtis' } });
 
   console.log('\n== venue map link ==');
   r = await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: 'https://maps.app.goo.gl/abc123' } });
@@ -120,6 +162,9 @@ async function main() {
   ok('token is NOT echoed back to the guest page', !('token' in r.j));
   ok('event details reach the guest', r.j.event.venue === 'Bahay namin');
   ok('the theme reaches the guest page', r.j.event.theme === 'emerald', r.j.event.theme);
+  ok('the age wording reaches the guest page',
+    r.j.event.ageDisplay === 'custom' && r.j.event.ageLabel === 'Fourtis',
+    r.j.event.ageDisplay + ' / ' + r.j.event.ageLabel);
   ok('the map link reaches the guest page', r.j.event.venueMapUrl === 'https://maps.example/venue',
     r.j.event.venueMapUrl);
 

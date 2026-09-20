@@ -283,6 +283,7 @@
       'd-venue': ev.venue, 'd-venueMapUrl': ev.venueMapUrl, 'd-dressCode': ev.dressCode,
       'd-rsvpDeadline': ev.rsvpDeadline,
       'd-hostName': ev.hostName, 'd-note': ev.note,
+      'd-ageDisplay': ev.ageDisplay || 'number', 'd-ageLabel': ev.ageLabel,
     };
     Object.keys(map).forEach(function (id) {
       var el = $(id);
@@ -434,7 +435,8 @@
     e.preventDefault();
     var body = {};
     ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate', 'startTime',
-      'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note'].forEach(function (f) {
+      'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note',
+      'ageDisplay', 'ageLabel'].forEach(function (f) {
       body[f] = $('ev-' + f).value;
     });
     api('/events', { method: 'POST', body: body }).then(function (ev) {
@@ -448,7 +450,8 @@
     e.preventDefault();
     var body = {};
     ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate', 'startTime',
-      'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note'].forEach(function (f) {
+      'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note',
+      'ageDisplay', 'ageLabel'].forEach(function (f) {
       body[f] = $('d-' + f).value;
     });
     api('/events/' + state.eventId, { method: 'PATCH', body: body })

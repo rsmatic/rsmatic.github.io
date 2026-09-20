@@ -13,7 +13,12 @@ export class HttpError extends Error {
 }
 
 export const EVENT_FIELDS = ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
-  'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName', 'theme'];
+  'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
+  'theme', 'ageDisplay', 'ageLabel'];
+
+/** What stands above the celebrant's name on the invitation. */
+export const AGE_DISPLAYS = ['number', 'custom', 'hidden'];
+export const DEFAULT_AGE_DISPLAY = 'number';
 
 /** Keep in sync with app/themes.js — the ids are the same list. */
 export const THEMES = ['rose-gold', 'midnight', 'emerald', 'burgundy', 'noir',
@@ -21,6 +26,13 @@ export const THEMES = ['rose-gold', 'midnight', 'emerald', 'burgundy', 'noir',
 export const DEFAULT_THEME = 'rose-gold';
 
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
+
+function normalizeAgeDisplay(value) {
+  const mode = str(value);
+  if (!mode) return DEFAULT_AGE_DISPLAY;
+  if (!AGE_DISPLAYS.includes(mode)) throw new HttpError(400, 'Unknown age display: ' + mode);
+  return mode;
+}
 
 function normalizeTheme(value) {
   const theme = str(value);
@@ -94,6 +106,8 @@ function publicSlotView(slot, event) {
       venue: event.venue,
       venueMapUrl: event.venueMapUrl,
       theme: event.theme,
+      ageDisplay: event.ageDisplay,
+      ageLabel: event.ageLabel,
       dressCode: event.dressCode,
       note: event.note,
       rsvpDeadline: event.rsvpDeadline,
@@ -181,6 +195,8 @@ export function createApi({ store, adminKey }) {
         for (const field of EVENT_FIELDS) event[field] = str(body[field]);
         event.theme = normalizeTheme(body.theme);
         event.venueMapUrl = normalizeUrl(body.venueMapUrl);
+        event.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
+        event.ageLabel = str(body.ageLabel).slice(0, 40);
         await store.createEvent(event);
         return { status: 201, data: event };
       }
@@ -230,6 +246,8 @@ export function createApi({ store, adminKey }) {
         }
         if ('theme' in body) patch.theme = normalizeTheme(body.theme);
         if ('venueMapUrl' in body) patch.venueMapUrl = normalizeUrl(body.venueMapUrl);
+        if ('ageDisplay' in body) patch.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
+        if ('ageLabel' in body) patch.ageLabel = str(body.ageLabel).slice(0, 40);
         const updated = await store.updateEvent(eventId, patch);
         if (!updated) throw new HttpError(404, 'Event not found.');
         return { status: 200, data: updated };

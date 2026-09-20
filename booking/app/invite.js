@@ -61,6 +61,16 @@
     return h12 + ':' + (bits[1] || '00') + ' ' + suffix;
   }
 
+  /** 41 -> "41st", 12 -> "12th". */
+  function ordinal(n) {
+    var lastTwo = n % 100;
+    if (lastTwo >= 11 && lastTwo <= 13) return n + 'th';
+    if (n % 10 === 1) return n + 'st';
+    if (n % 10 === 2) return n + 'nd';
+    if (n % 10 === 3) return n + 'rd';
+    return n + 'th';
+  }
+
   function ageAt(birthIso, eventIso) {
     var b = parseDate(birthIso);
     var e = parseDate(eventIso);
@@ -102,14 +112,37 @@
     window.abyApplyTheme(ev.theme);
 
     $('c-eyebrow').textContent = 'You are invited to';
-    if (age !== null) {
-      $('c-age').textContent = age;
-      $('c-age').classList.remove('hidden');
+
+    // The host chooses what stands above the name: the age, their own
+    // wording in its place, or nothing at all.
+    var mode = ev.ageDisplay || 'number';
+    var ownWording = String(ev.ageLabel || '').trim();
+    var showsAge = mode === 'number' && age !== null;
+    var ageEl = $('c-age');
+
+    ageEl.classList.remove('word');
+    if (showsAge) {
+      ageEl.textContent = String(age);
+      ageEl.classList.remove('hidden');
+    } else if (mode === 'custom' && ownWording) {
+      ageEl.textContent = ownWording;
+      ageEl.classList.add('word');
+      ageEl.classList.remove('hidden');
+    } else {
+      ageEl.textContent = '';
+      ageEl.classList.add('hidden');
     }
+
     $('c-name').textContent = ev.celebrant || ev.title;
-    $('c-sub').innerHTML = age !== null
-      ? escapeHtml((ev.nickname ? ev.nickname + "'s " : '') + age + 'th Birthday Celebration')
-      : escapeHtml(ev.title);
+
+    var whose = ev.nickname ? ev.nickname + "'s " : '';
+    if (showsAge) {
+      $('c-sub').textContent = whose + ordinal(age) + ' Birthday Celebration';
+    } else if (whose) {
+      $('c-sub').textContent = whose + 'Birthday Celebration';
+    } else {
+      $('c-sub').textContent = ev.title;
+    }
 
     var facts = [];
     if (ev.eventDate) facts.push(['Date', formatDate(ev.eventDate)]);

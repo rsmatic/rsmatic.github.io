@@ -126,6 +126,19 @@ Para magdagdag ng tema: magdagdag ng bloke sa `app/styles.css`, ng entry sa
 [`app/themes.js`](app/themes.js), at ng id sa `THEMES` sa
 [`api/core.js`](api/core.js). May test na tumitiyak na magkatugma ang huling dalawa.
 
+### Edad sa imbitasyon
+
+Sa **Step 2 — Event Details** may *Age on the invitation* na tatlo ang pagpipilian:
+
+| Pagpipilian | Ang malaking linya sa itaas ng pangalan | Ang subtitle |
+|---|---|---|
+| **Show the age** (default) | `41` | `Aby's 41st Birthday Celebration` |
+| **Show my own wording** | ang sarili mong text, hal. `Fourtis` | `Aby's Birthday Celebration` |
+| **Hide it** | wala | `Aby's Birthday Celebration` |
+
+Hanggang 40 karakter ang sariling wording, at mas maliit ang font nito kaysa sa numero
+para kasya ang salita sa cellphone.
+
 ### Link ng mapa
 
 May **Map link** na field sa detalye ng event. Kapag may laman, may lalabas na
@@ -152,10 +165,12 @@ Kung may maling link na naipadala, pindutin ang **Bagong link** — hindi na gag
 ## Pagbabago ng schema
 
 Kapag may naidagdag na column, may file sa [`worker/migrations/`](worker/migrations/).
-Patakbuhin ito nang isang beses laban sa production database:
+Patakbuhin ang bawat isa nang isang beses, ayon sa pagkakasunod.
+Laban sa production database:
 
 ```bash
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0001-theme-and-map.sql --config worker/wrangler.toml
+npx wrangler d1 execute aby41 --remote --file=worker/migrations/0002-age-label.sql --config worker/wrangler.toml
 ```
 
 Para sa bagong database, sapat na ang `schema.sql` — nandoon na ang lahat ng column.
@@ -230,7 +245,7 @@ booking/
 │   ├── server.js         Lokal na server (static + API)
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
-└── test/e2e.js           54 checks
+└── test/e2e.js           62 checks
 ```
 
 Iisa ang `api/core.js` para sa dalawang backend, kaya hindi sila magkakaiba ng ugali —

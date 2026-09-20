@@ -26,7 +26,7 @@ const SLOT_COLUMNS = {
 
 const EVENT_COLUMNS = ['id', 'title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
   'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
-  'theme', 'createdAt'];
+  'theme', 'ageDisplay', 'ageLabel', 'createdAt'];
 
 const slotFromRow = (row) => (row ? {
   id: row.id,
