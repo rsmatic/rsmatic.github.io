@@ -59,6 +59,14 @@
     toastTimer = setTimeout(function () { el.className = ''; }, 2800);
   }
 
+  /** True when this page can reach an API at all. */
+  function apiConfigured() {
+    if (apiBase()) return true;
+    var host = window.location.hostname;
+    // An empty api only works when a local server is serving this page too.
+    return host === 'localhost' || host === '127.0.0.1' || host === '';
+  }
+
   /** Where the API lives: the Worker URL from app/config.js, or this origin. */
   function apiBase() {
     var cfg = window.ABY_CONFIG || {};
@@ -479,6 +487,16 @@
     if (savedBase) $('baseUrl').value = savedBase;
   } catch (e) { /* ignore */ }
   refreshLinkNotes();
+
+  if (!apiConfigured()) {
+    var gateErr = $('gateError');
+    gateErr.innerHTML = 'Wala pang nakatakdang API.<br>I-set ang <b>api</b> sa <code>app/config.js</code> ' +
+      'sa URL ng Cloudflare Worker, tapos i-commit at i-push.';
+    gateErr.classList.remove('hidden');
+    $('gateKey').disabled = true;
+    $('gateForm').querySelector('button').disabled = true;
+    return;
+  }
 
   var saved = null;
   try { saved = localStorage.getItem(KEY_STORE); } catch (e) { /* ignore */ }

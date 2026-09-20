@@ -10,5 +10,5 @@
    =========================================================== */
 
 window.ABY_CONFIG = {
-  api: '',
+  api: 'https://aby41-api.rsmatic-dev.workers.dev',
 };

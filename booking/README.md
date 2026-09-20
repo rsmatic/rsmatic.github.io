@@ -22,7 +22,7 @@ https://rsmatic.github.io/booking/        GitHub Pages (static)
               │
               │  fetch()
               ▼
-https://aby41-api.<ikaw>.workers.dev      Cloudflare Worker (libre)
+https://aby41-api.rsmatic-dev.workers.dev      Cloudflare Worker (libre)
   └── D1 (SQLite)  ←  ANG DATABASE
 ```
 
@@ -51,18 +51,27 @@ npx wrangler d1 execute aby41 --remote --file=worker/schema.sql --config worker/
 
 # 4. Itakda ang admin key (ito ang ipapasok mo sa admin page — huwag ibahagi)
 npx wrangler secret put ADMIN_KEY --config worker/wrangler.toml
+```
 
-# 5. I-deploy
+**5. Magparehistro ng `workers.dev` subdomain.** Isang beses lang ito at sa dashboard
+lang magagawa — hindi ito kayang gawin ng wrangler:
+
+<https://dash.cloudflare.com/2f2467d11ed71e4aacff8ab7155252a5/workers/onboarding>
+
+Ang subdomain mo ay `rsmatic-dev`, kaya ang address ng Worker ay `https://aby41-api.rsmatic-dev.workers.dev`.
+
+```bash
+# 6. I-deploy
 npx wrangler deploy --config worker/wrangler.toml
 ```
 
-Magbibigay ang huling command ng URL, halimbawa `https://aby41-api.rsmatic.workers.dev`.
+Magbibigay ang huling command ng URL, halimbawa `https://aby41-api.rsmatic-dev.workers.dev`.
 
 **Huling hakbang:** i-paste ang URL na iyon sa [`app/config.js`](app/config.js):
 
 ```js
 window.ABY_CONFIG = {
-  api: 'https://aby41-api.rsmatic.workers.dev',
+  api: 'https://aby41-api.rsmatic-dev.workers.dev',
 };
 ```
 
@@ -153,7 +162,7 @@ node test/e2e.js               # isa pa
 Pwede ring patakbuhin laban sa tunay na Worker:
 
 ```bash
-API=https://aby41-api.rsmatic.workers.dev KEY=ang-key-mo node test/e2e.js
+API=https://aby41-api.rsmatic-dev.workers.dev KEY=ang-key-mo node test/e2e.js
 ```
 
 ---

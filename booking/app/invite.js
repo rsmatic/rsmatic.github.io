@@ -229,6 +229,20 @@
 
   /* ------------------------------------------------------------ bootstrap */
 
+  function apiConfigured() {
+    if (apiBase()) return true;
+    var host = window.location.hostname;
+    return host === 'localhost' || host === '127.0.0.1' || host === '';
+  }
+
+  if (!apiConfigured()) {
+    $('invalid').querySelector('h2').textContent = 'Hindi pa handa ang page na ito';
+    $('invalid').querySelector('p').textContent =
+      'May teknikal na aberya sa imbitasyon. Pakisabi po sa nag-imbita sa inyo.';
+    show('invalid');
+    return;
+  }
+
   if (!token) {
     show('invalid');
     return;
