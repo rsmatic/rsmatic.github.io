@@ -1,5 +1,5 @@
 -- Aby's 41st — schema para sa Cloudflare D1.
--- Patakbuhin:  npx wrangler d1 execute aby41 --remote --file=schema.sql
+-- Patakbuhin:  npx wrangler d1 execute aby41 --remote --file=worker/schema.sql
 
 CREATE TABLE IF NOT EXISTS events (
   id           TEXT PRIMARY KEY,
@@ -10,10 +10,12 @@ CREATE TABLE IF NOT EXISTS events (
   eventDate    TEXT NOT NULL,
   startTime    TEXT,
   venue        TEXT,
+  venueMapUrl  TEXT,
   dressCode    TEXT,
   note         TEXT,
   rsvpDeadline TEXT,
   hostName     TEXT,
+  theme        TEXT,
   createdAt    TEXT
 );
 
@@ -38,7 +40,8 @@ CREATE INDEX IF NOT EXISTS idx_slots_token ON slots (token);
 
 -- Ang event ni Aby, handa na.
 INSERT OR IGNORE INTO events
-  (id, title, celebrant, nickname, birthDate, eventDate, startTime, venue, dressCode, note, rsvpDeadline, hostName, createdAt)
+  (id, title, celebrant, nickname, birthDate, eventDate, startTime, venue, venueMapUrl,
+   dressCode, note, rsvpDeadline, hostName, theme, createdAt)
 VALUES
   ('evt_aby41', 'Aby''s 41st Birthday', 'Mary Abegail Matic', 'Aby', '1985-10-25', '2026-10-25',
-   '18:00', '', '', '', '2026-10-18', 'Rexter Matic', '2026-09-20T00:00:00.000Z');
+   '18:00', '', '', '', '', '2026-10-18', 'Rexter Matic', 'rose-gold', '2026-09-20T00:00:00.000Z');

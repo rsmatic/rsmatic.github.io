@@ -18,16 +18,16 @@
   .card {
     border: 1px solid var(--line);
     border-radius: 20px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, transparent), color-mix(in srgb, var(--text) 2%, transparent));
     padding: 30px 24px;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.3);
     position: relative;
     overflow: hidden;
   }
   .card::after {
     content: '';
     position: absolute; inset: 7px;
-    border: 1px solid rgba(231,194,125,0.14);
+    border: 1px solid color-mix(in srgb, var(--gold) 16%, transparent);
     border-radius: 14px;
     pointer-events: none;
   }
@@ -47,15 +47,24 @@
   dl.facts { margin: 22px 0 0; display: grid; gap: 1px; background: var(--line-soft); border-radius: 12px; overflow: hidden; }
   dl.facts > div {
     display: grid; grid-template-columns: 96px 1fr; gap: 12px;
-    background: rgba(0,0,0,0.22); padding: 12px 14px;
+    background: var(--ink-2); padding: 12px 14px;
   }
   dl.facts dt { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dim); font-weight: 600; align-self: center; }
   dl.facts dd { margin: 0; font-size: 15px; }
 
+  .map-link {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 12px; padding: 12px 16px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--accent-soft);
+    color: var(--gold); text-decoration: none; font-size: 14px; font-weight: 600;
+  }
+  .map-link:hover { background: var(--accent-soft-2); }
+  .map-link .pin { font-size: 16px; }
+
   .seat-strip {
     margin-top: 18px; text-align: center; padding: 16px;
     border: 1px dashed var(--line); border-radius: 12px;
-    background: rgba(231,194,125,0.05);
+    background: color-mix(in srgb, var(--gold) 6%, transparent);
   }
   .seat-strip .who { font-family: var(--serif); font-size: 25px; }
   .seat-strip .where { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 4px; font-weight: 600; }
@@ -67,14 +76,14 @@
   .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .choice {
     padding: 18px 12px; border-radius: 14px; cursor: pointer; text-align: center;
-    border: 1px solid var(--line-soft); background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 4%, transparent);
     font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text);
     line-height: 1.35;
   }
   .choice .mark { display: block; font-size: 22px; margin-bottom: 6px; }
-  .choice:hover { background: rgba(255,255,255,0.07); }
-  .choice.yes.sel { border-color: var(--ok); background: rgba(127,214,171,0.14); color: var(--ok); }
-  .choice.no.sel { border-color: var(--no); background: rgba(240,138,138,0.12); color: var(--no); }
+  .choice:hover { background: var(--hover); }
+  .choice.yes.sel { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+  .choice.no.sel { border-color: var(--no); background: color-mix(in srgb, var(--no) 13%, transparent); color: var(--no); }
 
   #reasonBox, #messageBox { margin-top: 16px; }
   #submitBtn { width: 100%; margin-top: 18px; padding: 14px; font-size: 15px; }
@@ -86,7 +95,7 @@
   .result p { color: var(--dim); font-size: 14px; margin: 0 auto; max-width: 40ch; }
   .result .recap {
     margin-top: 20px; padding: 14px; border-radius: 12px;
-    background: rgba(0,0,0,0.25); font-size: 14px; text-align: left;
+    background: var(--ink-2); font-size: 14px; text-align: left;
   }
   .result .recap b { color: var(--dim); font-weight: 600; }
   .result button { margin-top: 20px; }
@@ -124,6 +133,10 @@
     </div>
 
     <dl class="facts" id="c-facts"></dl>
+
+    <a id="c-map" class="map-link hidden" target="_blank" rel="noopener noreferrer">
+      <span class="pin">&#9906;</span> Open the venue in Maps
+    </a>
 
     <div class="seat-strip">
       <div class="who" id="c-guest"></div>
@@ -170,6 +183,7 @@
 
 <div id="toast"></div>
 <script src="app/config.js"></script>
+<script src="app/themes.js"></script>
 <script src="app/invite.js"></script>
 </body>
 </html>

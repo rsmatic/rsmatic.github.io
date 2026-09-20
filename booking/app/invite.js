@@ -99,6 +99,8 @@
     var ev = slot.event;
     var age = ageAt(ev.birthDate, ev.eventDate);
 
+    window.abyApplyTheme(ev.theme);
+
     $('c-eyebrow').textContent = 'You are invited to';
     if (age !== null) {
       $('c-age').textContent = age;
@@ -117,6 +119,18 @@
     $('c-facts').innerHTML = facts.map(function (f) {
       return '<div><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>';
     }).join('');
+
+    // The server only stores http(s) map links, but this is what turns the
+    // value into a clickable href, so check the scheme here as well.
+    var mapLink = $('c-map');
+    var mapUrl = String(ev.venueMapUrl || '');
+    if (/^https?:\/\//i.test(mapUrl)) {
+      mapLink.href = mapUrl;
+      mapLink.classList.remove('hidden');
+    } else {
+      mapLink.removeAttribute('href');
+      mapLink.classList.add('hidden');
+    }
 
     $('c-guest').textContent = slot.guestName || 'Guest';
     $('c-seat').textContent = slot.label;

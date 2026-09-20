@@ -92,13 +92,15 @@ Pagkatapos ng ilang minuto, gagana na ang <https://rsmatic.github.io/booking/>.
 ## Ang daloy
 
 1. **Gumawa ng event** sa admin — o gamitin na lang ang naka-handa nang `Aby's 41st Birthday`.
-2. **Gumawa ng slots** — isang slot = isang upuan. Bawat pindot ay gumagawa ng buong mesa
+2. **Pumili ng tema** — sampung tema ang mapagpipilian (anim na madilim, apat na maliwanag).
+   Agad itong nakikita sa admin, at iyon din ang makikita ng bisita sa imbitasyon nila.
+3. **Gumawa ng slots** — isang slot = isang upuan. Bawat pindot ay gumagawa ng buong mesa
    (halimbawa: `Table 1`, 10 upuan).
-3. **Ilagay ang pangalan ng bisita** sa bawat upuan. Awtomatikong nase-save.
-4. **Kopyahin ang link o ang buong mensahe**, tapos i-paste sa Messenger o Viber.
+4. **Ilagay ang pangalan ng bisita** sa bawat upuan. Awtomatikong nase-save.
+5. **Kopyahin ang link o ang buong mensahe**, tapos i-paste sa Messenger o Viber.
    Isang link = isang upuan, kaya hindi pwedeng magkapalit ang mga bisita.
-5. **Sasagot ang bisita** sa link — *Oo, makakarating ako* o *Hindi ako makakarating* na may dahilan.
-6. **Mag-lo-lock ang upuan** sa admin board. Nagre-refresh ito kada 15 segundo, kaya lalabas ang
+6. **Sasagot ang bisita** sa link — *Yes, I can come* o *Sorry, I cannot come* na may dahilan.
+7. **Mag-lo-lock ang upuan** sa admin board. Nagre-refresh ito kada 15 segundo, kaya lalabas ang
    sagot kahit hindi mo pindutin ang refresh.
 
 Ganito ang hugis ng link ng bisita:
@@ -106,6 +108,32 @@ Ganito ang hugis ng link ng bisita:
 ```
 https://rsmatic.github.io/booking/i.html?t=8Kd2mPqR4xVnT
 ```
+
+### Tema
+
+Sampu ang pagpipilian, naka-save sa event kaya bawat event ay may sarili nitong hitsura:
+
+| Madilim | Maliwanag |
+|---|---|
+| `rose-gold` (default), `midnight`, `emerald`, `burgundy`, `noir`, `tropical` | `ivory`, `blush`, `sage`, `lavender` |
+
+Ang bawat tema ay nagtatakda ng 13 token lang (`--ink`, `--gold`, `--text`, `--ok`, …) sa
+[`app/styles.css`](app/styles.css). Ang lahat ng panel tint, border at hover ay
+hinahalo mula sa mga iyon gamit ang `color-mix()`, kaya hindi na kailangang ulitin
+ng bagong tema ang bawat component — at gumagana ito sa maliwanag na background gaya sa madilim.
+
+Para magdagdag ng tema: magdagdag ng bloke sa `app/styles.css`, ng entry sa
+[`app/themes.js`](app/themes.js), at ng id sa `THEMES` sa
+[`api/core.js`](api/core.js). May test na tumitiyak na magkatugma ang huling dalawa.
+
+### Link ng mapa
+
+May **Map link** na field sa detalye ng event. Kapag may laman, may lalabas na
+*Open the venue in Maps* na button sa imbitasyon ng bisita.
+
+Ang `http://` at `https://` lang ang tinatanggap — ang `javascript:` at `data:` ay
+tinatanggihan ng server nang may 400, at sinusuri ulit ng page bago gawing `href`.
+Ang bare na `maps.app.goo.gl/xxx` ay awtomatikong ginagawang `https://`.
 
 ### Mga status ng upuan
 
@@ -120,6 +148,17 @@ Kapag binura mo ang pangalan sa isang upuan, babalik ito sa `open` at mabubura r
 Kung may maling link na naipadala, pindutin ang **Bagong link** — hindi na gagana ang luma.
 
 ---
+
+## Pagbabago ng schema
+
+Kapag may naidagdag na column, may file sa [`worker/migrations/`](worker/migrations/).
+Patakbuhin ito nang isang beses laban sa production database:
+
+```bash
+npx wrangler d1 execute aby41 --remote --file=worker/migrations/0001-theme-and-map.sql --config worker/wrangler.toml
+```
+
+Para sa bagong database, sapat na ang `schema.sql` — nandoon na ang lahat ng column.
 
 ## Backup
 
@@ -175,6 +214,7 @@ booking/
 ├── i.html                Page ng bisita         ← /booking/i.html?t=TOKEN
 ├── app/
 │   ├── config.js         URL ng API (ito lang ang binabago pagka-deploy)
+│   ├── themes.js         Ang sampung tema na makikita sa picker
 │   ├── admin.js
 │   ├── invite.js
 │   └── styles.css
@@ -182,6 +222,7 @@ booking/
 ├── worker/
 │   ├── wrangler.toml     Config ng Cloudflare
 │   ├── schema.sql        Mga table + ang event ni Aby
+│   ├── migrations/       Mga pagbabago sa schema ng umiiral nang database
 │   └── src/
 │       ├── index.js      Entry point ng Worker (CORS, routing)
 │       └── d1-store.js   Storage sa D1
@@ -189,7 +230,7 @@ booking/
 │   ├── server.js         Lokal na server (static + API)
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
-└── test/e2e.js           41 checks
+└── test/e2e.js           54 checks
 ```
 
 Iisa ang `api/core.js` para sa dalawang backend, kaya hindi sila magkakaiba ng ugali —
@@ -206,7 +247,7 @@ Kailangan ng header na `x-admin-key` ang mga admin endpoint. Ang guest endpoint 
 | `POST` | `/api/session` | Suriin ang admin key |
 | `GET` | `/api/events` | Lahat ng event at slot |
 | `POST` | `/api/events` | Gumawa ng event |
-| `PATCH` | `/api/events/:id` | I-update ang event |
+| `PATCH` | `/api/events/:id` | I-update ang event (kasama ang `theme` at `venueMapUrl`) |
 | `DELETE` | `/api/events/:id` | Burahin ang event at mga slot nito |
 | `POST` | `/api/events/:id/slots` | Gumawa ng slots — `{ table, count, startAt }` |
 | `DELETE` | `/api/events/:id/slots` | Burahin ang LAHAT ng upuan ng event (mananatili ang event) |

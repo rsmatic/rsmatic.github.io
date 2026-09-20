@@ -13,9 +13,42 @@ export class HttpError extends Error {
 }
 
 export const EVENT_FIELDS = ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
-  'startTime', 'venue', 'dressCode', 'note', 'rsvpDeadline', 'hostName'];
+  'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName', 'theme'];
+
+/** Keep in sync with app/themes.js — the ids are the same list. */
+export const THEMES = ['rose-gold', 'midnight', 'emerald', 'burgundy', 'noir',
+  'tropical', 'ivory', 'blush', 'sage', 'lavender'];
+export const DEFAULT_THEME = 'rose-gold';
 
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
+
+function normalizeTheme(value) {
+  const theme = str(value);
+  if (!theme) return DEFAULT_THEME;
+  if (!THEMES.includes(theme)) throw new HttpError(400, 'Unknown theme: ' + theme);
+  return theme;
+}
+
+/**
+ * The map link becomes an href on the guest page, so only http(s) may be
+ * stored — never javascript: or data:. A bare "maps.app.goo.gl/..." is
+ * treated as https rather than rejected.
+ */
+function normalizeUrl(value) {
+  const raw = str(value);
+  if (!raw) return '';
+  const candidate = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : 'https://' + raw;
+  let parsed;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    throw new HttpError(400, 'That map link is not a valid URL.');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new HttpError(400, 'The map link must start with http:// or https://');
+  }
+  return parsed.toString();
+}
 
 const HEX = '0123456789abcdef';
 const TOKEN_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
@@ -59,6 +92,8 @@ function publicSlotView(slot, event) {
       eventDate: event.eventDate,
       startTime: event.startTime,
       venue: event.venue,
+      venueMapUrl: event.venueMapUrl,
+      theme: event.theme,
       dressCode: event.dressCode,
       note: event.note,
       rsvpDeadline: event.rsvpDeadline,
@@ -144,6 +179,8 @@ export function createApi({ store, adminKey }) {
         if (!str(body.eventDate)) throw new HttpError(400, 'The event needs a date.');
         const event = { id: newId('evt'), createdAt: new Date().toISOString() };
         for (const field of EVENT_FIELDS) event[field] = str(body[field]);
+        event.theme = normalizeTheme(body.theme);
+        event.venueMapUrl = normalizeUrl(body.venueMapUrl);
         await store.createEvent(event);
         return { status: 201, data: event };
       }
@@ -191,6 +228,8 @@ export function createApi({ store, adminKey }) {
         for (const field of EVENT_FIELDS) {
           if (field in body) patch[field] = str(body[field]);
         }
+        if ('theme' in body) patch.theme = normalizeTheme(body.theme);
+        if ('venueMapUrl' in body) patch.venueMapUrl = normalizeUrl(body.venueMapUrl);
         const updated = await store.updateEvent(eventId, patch);
         if (!updated) throw new HttpError(404, 'Event not found.');
         return { status: 200, data: updated };

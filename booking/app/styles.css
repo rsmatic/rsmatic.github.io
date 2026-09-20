@@ -1,25 +1,118 @@
 /* ===========================================================
    Aby's 41st — shared styling for the admin console and the
    guest invitation page.
+
+   A theme sets 13 raw tokens and nothing else. Everything the
+   components use is mixed out of those, so a new theme never
+   has to restate panel tints, borders or hover states, and it
+   works on a light background as readily as a dark one.
    =========================================================== */
 
-:root {
-  --ink: #170e14;
-  --ink-2: #1f1420;
-  --panel: rgba(255, 255, 255, 0.045);
-  --panel-solid: #241829;
-  --line: rgba(231, 194, 125, 0.2);
-  --line-soft: rgba(255, 255, 255, 0.09);
-  --gold: #e7c27d;
-  --gold-dim: rgba(231, 194, 125, 0.55);
-  --rose: #e9a6b8;
+:root,
+[data-theme='rose-gold'] {
+  color-scheme: dark;
+  --ink: #170e14;          /* page background */
+  --ink-2: #221620;        /* recessed surface: inputs, wells */
+  --panel-solid: #241829;  /* opaque surface: toasts, popovers */
+  --gold: #e7c27d;         /* primary accent */
+  --rose: #e9a6b8;         /* secondary accent */
   --text: #f2e9ee;
   --dim: #a8929e;
   --faint: #6f5d68;
+  --on-accent: #241829;    /* text drawn on top of --gold */
   --ok: #7fd6ab;
   --no: #f08a8a;
   --wait: #e8c86a;
   --open: #8ab4d8;
+}
+
+[data-theme='midnight'] {
+  color-scheme: dark;
+  --ink: #0b1020; --ink-2: #121a2e; --panel-solid: #16203a;
+  --gold: #d9c18a; --rose: #9db8dd;
+  --text: #e9eefa; --dim: #94a3bd; --faint: #5a6880; --on-accent: #0b1020;
+  --ok: #7fd6ab; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='emerald'] {
+  color-scheme: dark;
+  --ink: #0b1512; --ink-2: #112019; --panel-solid: #14261d;
+  --gold: #e3c583; --rose: #8fd3ad;
+  --text: #e9f3ec; --dim: #92aa9d; --faint: #56695f; --on-accent: #0b1512;
+  --ok: #7fd6ab; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='burgundy'] {
+  color-scheme: dark;
+  --ink: #1a0c10; --ink-2: #26131a; --panel-solid: #2b1620;
+  --gold: #e6b7a1; --rose: #f0a9b8;
+  --text: #f6e9ec; --dim: #b4959c; --faint: #75585f; --on-accent: #1a0c10;
+  --ok: #7fd6ab; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='noir'] {
+  color-scheme: dark;
+  --ink: #0d0d0f; --ink-2: #16161a; --panel-solid: #1b1b20;
+  --gold: #ded6c6; --rose: #b9b2a6;
+  --text: #f2f0ec; --dim: #9d9a95; --faint: #615f5b; --on-accent: #0d0d0f;
+  --ok: #7fd6ab; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='tropical'] {
+  color-scheme: dark;
+  --ink: #07171c; --ink-2: #0d2229; --panel-solid: #102a33;
+  --gold: #f2a48c; --rose: #6fd4cd;
+  --text: #e6f4f4; --dim: #8dacb0; --faint: #52706f; --on-accent: #07171c;
+  --ok: #6fd4cd; --no: #f08a8a; --wait: #e8c86a; --open: #8ab4d8;
+}
+
+[data-theme='ivory'] {
+  color-scheme: light;
+  --ink: #faf6ef; --ink-2: #f1e9db; --panel-solid: #ffffff;
+  --gold: #a37a2e; --rose: #c58fa0;
+  --text: #2e2720; --dim: #6d6152; --faint: #9c9081; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='blush'] {
+  color-scheme: light;
+  --ink: #fdf3f5; --ink-2: #f7e6ea; --panel-solid: #ffffff;
+  --gold: #b0576f; --rose: #d98ca2;
+  --text: #34222a; --dim: #7a5f68; --faint: #a98e97; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='sage'] {
+  color-scheme: light;
+  --ink: #f4f7f0; --ink-2: #e7eede; --panel-solid: #ffffff;
+  --gold: #4f7a43; --rose: #86a97a;
+  --text: #26301f; --dim: #5f6e56; --faint: #8f9c86; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+[data-theme='lavender'] {
+  color-scheme: light;
+  --ink: #f6f4fb; --ink-2: #eae5f5; --panel-solid: #ffffff;
+  --gold: #6a4fa3; --rose: #a58cd1;
+  --text: #2a2338; --dim: #64597a; --faint: #948aa8; --on-accent: #ffffff;
+  --ok: #1f7a54; --no: #b23b3b; --wait: #8a6712; --open: #2f6ea8;
+}
+
+/* ---- everything below is mixed out of the tokens above ---- */
+
+:root {
+  --panel: color-mix(in srgb, var(--text) 5%, transparent);
+  --line-soft: color-mix(in srgb, var(--text) 11%, transparent);
+  --line: color-mix(in srgb, var(--gold) 26%, transparent);
+  --gold-dim: color-mix(in srgb, var(--gold) 62%, transparent);
+  --hover: color-mix(in srgb, var(--text) 8%, transparent);
+  --accent-soft: color-mix(in srgb, var(--gold) 12%, transparent);
+  --accent-soft-2: color-mix(in srgb, var(--gold) 22%, transparent);
+  --ok-soft: color-mix(in srgb, var(--ok) 14%, transparent);
+  --no-soft: color-mix(in srgb, var(--no) 12%, transparent);
+  --wait-soft: color-mix(in srgb, var(--wait) 13%, transparent);
+  --open-soft: color-mix(in srgb, var(--open) 13%, transparent);
+
   --radius: 14px;
   --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -27,15 +120,12 @@
 
 * { box-sizing: border-box; }
 
-html, body {
-  margin: 0;
-  padding: 0;
-}
+html, body { margin: 0; padding: 0; }
 
 body {
   background:
-    radial-gradient(1100px 600px at 12% -12%, rgba(231, 194, 125, 0.11), transparent 62%),
-    radial-gradient(900px 520px at 92% 8%, rgba(233, 166, 184, 0.1), transparent 60%),
+    radial-gradient(1100px 600px at 12% -12%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 62%),
+    radial-gradient(900px 520px at 92% 8%, color-mix(in srgb, var(--rose) 13%, transparent), transparent 60%),
     var(--ink);
   background-attachment: fixed;
   color: var(--text);
@@ -85,7 +175,7 @@ label {
 
 input, textarea, select {
   width: 100%;
-  background: rgba(0, 0, 0, 0.28);
+  background: var(--ink-2);
   border: 1px solid var(--line-soft);
   border-radius: 10px;
   color: var(--text);
@@ -98,7 +188,7 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--gold-dim);
-  box-shadow: 0 0 0 3px rgba(231, 194, 125, 0.12);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 textarea { resize: vertical; min-height: 88px; }
@@ -109,30 +199,33 @@ button {
   font-weight: 600;
   border-radius: 10px;
   border: 1px solid var(--line);
-  background: rgba(231, 194, 125, 0.1);
+  background: var(--accent-soft);
   color: var(--gold);
   padding: 10px 16px;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.08s ease, opacity 0.15s ease;
 }
 
-button:hover:not(:disabled) { background: rgba(231, 194, 125, 0.2); }
+button:hover:not(:disabled) { background: var(--accent-soft-2); }
 button:active:not(:disabled) { transform: translateY(1px); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 button.primary {
-  background: linear-gradient(135deg, var(--gold), #d9a95e);
-  color: #241829;
+  background: linear-gradient(135deg, var(--gold), color-mix(in srgb, var(--gold) 80%, #000));
+  color: var(--on-accent);
   border-color: transparent;
 }
-button.primary:hover:not(:disabled) { filter: brightness(1.08); background: linear-gradient(135deg, var(--gold), #d9a95e); }
+button.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  background: linear-gradient(135deg, var(--gold), color-mix(in srgb, var(--gold) 80%, #000));
+}
 
 button.ghost {
   background: transparent;
   border-color: var(--line-soft);
   color: var(--dim);
 }
-button.ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); color: var(--text); }
+button.ghost:hover:not(:disabled) { background: var(--hover); color: var(--text); }
 
 button.tiny {
   font-size: 12px;
@@ -140,8 +233,12 @@ button.tiny {
   border-radius: 8px;
 }
 
-button.danger { color: var(--no); border-color: rgba(240, 138, 138, 0.3); background: rgba(240, 138, 138, 0.08); }
-button.danger:hover:not(:disabled) { background: rgba(240, 138, 138, 0.18); }
+button.danger {
+  color: var(--no);
+  border-color: color-mix(in srgb, var(--no) 32%, transparent);
+  background: color-mix(in srgb, var(--no) 8%, transparent);
+}
+button.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--no) 18%, transparent); }
 
 .field + .field { margin-top: 14px; }
 
@@ -174,10 +271,10 @@ button.danger:hover:not(:disabled) { background: rgba(240, 138, 138, 0.18); }
   border-radius: 50%;
   background: currentColor;
 }
-.badge.open { color: var(--open); background: rgba(138, 180, 216, 0.12); }
-.badge.invited { color: var(--wait); background: rgba(232, 200, 106, 0.12); }
-.badge.confirmed { color: var(--ok); background: rgba(127, 214, 171, 0.14); }
-.badge.declined { color: var(--no); background: rgba(240, 138, 138, 0.12); }
+.badge.open { color: var(--open); background: var(--open-soft); }
+.badge.invited { color: var(--wait); background: var(--wait-soft); }
+.badge.confirmed { color: var(--ok); background: var(--ok-soft); }
+.badge.declined { color: var(--no); background: var(--no-soft); }
 
 /* ----------------------------------------------------------------- toasts */
 
@@ -192,7 +289,7 @@ button.danger:hover:not(:disabled) { background: rgba(240, 138, 138, 0.18); }
   padding: 12px 20px;
   border-radius: 999px;
   font-size: 14px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -201,4 +298,4 @@ button.danger:hover:not(:disabled) { background: rgba(240, 138, 138, 0.18); }
   text-align: center;
 }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
-#toast.error { border-color: rgba(240, 138, 138, 0.5); color: var(--no); }
+#toast.error { border-color: color-mix(in srgb, var(--no) 55%, transparent); color: var(--no); }

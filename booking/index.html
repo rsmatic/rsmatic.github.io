@@ -30,7 +30,7 @@
   .step {
     display: inline-flex; align-items: center; justify-content: center;
     width: 24px; height: 24px; border-radius: 50%;
-    background: rgba(231,194,125,0.14); color: var(--gold);
+    background: var(--accent-soft); color: var(--gold);
     font-family: var(--sans); font-size: 12px; font-weight: 700;
   }
 
@@ -41,8 +41,8 @@
     background: var(--panel); border: 1px solid var(--line-soft); color: var(--text);
     font-weight: 400; cursor: pointer; display: block; width: 100%;
   }
-  .event-card:hover { background: rgba(255,255,255,0.07); }
-  .event-card.active { border-color: var(--gold); background: rgba(231,194,125,0.1); }
+  .event-card:hover { background: var(--hover); }
+  .event-card.active { border-color: var(--gold); background: var(--accent-soft); }
   .event-card .name { font-family: var(--serif); font-size: 19px; color: var(--text); }
   .event-card .meta { font-size: 12px; color: var(--dim); margin-top: 2px; }
 
@@ -65,14 +65,14 @@
     grid-template-columns: 132px minmax(160px, 1fr) minmax(140px, 0.7fr) auto;
     align-items: center;
   }
-  .slot.confirmed { border-color: rgba(127,214,171,0.4); background: rgba(127,214,171,0.06); }
-  .slot.declined { border-color: rgba(240,138,138,0.28); background: rgba(240,138,138,0.05); }
+  .slot.confirmed { border-color: color-mix(in srgb, var(--ok) 42%, transparent); background: color-mix(in srgb, var(--ok) 7%, transparent); }
+  .slot.declined { border-color: color-mix(in srgb, var(--no) 30%, transparent); background: color-mix(in srgb, var(--no) 6%, transparent); }
   .slot .seat { font-family: var(--serif); font-size: 17px; }
   .slot .seat small { display: block; font-family: var(--sans); font-size: 11px; color: var(--faint); letter-spacing: 0.1em; text-transform: uppercase; }
   .slot .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .slot .note {
     grid-column: 1 / -1; font-size: 13px; padding: 10px 12px;
-    border-radius: 10px; background: rgba(0,0,0,0.25); border-left: 3px solid var(--line);
+    border-radius: 10px; background: var(--ink-2); border-left: 3px solid var(--line);
   }
   .slot .note b { color: var(--dim); font-weight: 600; }
   .slot .note.declined { border-left-color: var(--no); }
@@ -85,7 +85,24 @@
     font-size: 12px; padding: 7px 13px; border-radius: 999px; cursor: pointer;
     border: 1px solid var(--line-soft); background: transparent; color: var(--dim); font-weight: 600;
   }
-  .chip.active { border-color: var(--gold); color: var(--gold); background: rgba(231,194,125,0.1); }
+  .chip.active { border-color: var(--gold); color: var(--gold); background: var(--accent-soft); }
+
+  /* ---- themes ---- */
+  #themeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); gap: 12px; }
+  .theme-card {
+    padding: 0; overflow: hidden; text-align: left; cursor: pointer;
+    border: 1px solid var(--line-soft); border-radius: var(--radius);
+    background: var(--panel); color: var(--text); font-weight: 400; display: block; width: 100%;
+  }
+  .theme-card:hover { border-color: var(--gold-dim); }
+  .theme-card.active { border-color: var(--gold); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .theme-card .preview { height: 56px; display: flex; align-items: center; gap: 7px; padding: 0 14px; }
+  .theme-card .dot { width: 17px; height: 17px; border-radius: 50%; }
+  .theme-card .bar { flex: 1; height: 5px; border-radius: 3px; opacity: 0.45; }
+  .theme-card .meta { padding: 9px 14px 11px; }
+  .theme-card .tname { font-family: var(--serif); font-size: 17px; display: block; line-height: 1.2; }
+  .theme-card .tnote { font-size: 11px; color: var(--dim); }
+  .theme-card .tcheck { float: right; color: var(--gold); font-size: 13px; }
 
   details.collapse { border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--panel); }
   details.collapse > summary {
@@ -163,6 +180,7 @@
             <div class="field"><label for="ev-eventDate">Event date *</label><input id="ev-eventDate" type="date" required /></div>
             <div class="field"><label for="ev-startTime">Time</label><input id="ev-startTime" type="time" /></div>
             <div class="field"><label for="ev-venue">Venue</label><input id="ev-venue" placeholder="Name and address of the place" /></div>
+            <div class="field"><label for="ev-venueMapUrl">Map link</label><input id="ev-venueMapUrl" placeholder="https://maps.app.goo.gl/…" /></div>
             <div class="field"><label for="ev-dressCode">Dress code</label><input id="ev-dressCode" placeholder="Smart casual" /></div>
             <div class="field"><label for="ev-rsvpDeadline">RSVP deadline</label><input id="ev-rsvpDeadline" type="date" /></div>
             <div class="field"><label for="ev-hostName">Host</label><input id="ev-hostName" placeholder="Rexter Matic" /></div>
@@ -192,6 +210,7 @@
               <div class="field"><label for="d-eventDate">Event date *</label><input id="d-eventDate" type="date" required /></div>
               <div class="field"><label for="d-startTime">Time</label><input id="d-startTime" type="time" /></div>
               <div class="field"><label for="d-venue">Venue</label><input id="d-venue" /></div>
+              <div class="field"><label for="d-venueMapUrl">Map link</label><input id="d-venueMapUrl" placeholder="https://maps.app.goo.gl/…" /></div>
               <div class="field"><label for="d-dressCode">Dress code</label><input id="d-dressCode" /></div>
               <div class="field"><label for="d-rsvpDeadline">RSVP deadline</label><input id="d-rsvpDeadline" type="date" /></div>
               <div class="field"><label for="d-hostName">Host</label><input id="d-hostName" /></div>
@@ -206,9 +225,16 @@
       </details>
     </section>
 
-    <!-- 3. SLOTS -->
+    <!-- 3. THEME -->
     <section class="block">
-      <h2><span class="step">3</span> Create Slots</h2>
+      <h2><span class="step">3</span> Theme</h2>
+      <p class="hint">This is how the invitation looks to your guests. This console follows the same theme, so what you see here is what they get.</p>
+      <div id="themeGrid"></div>
+    </section>
+
+    <!-- 4. SLOTS -->
+    <section class="block">
+      <h2><span class="step">4</span> Create Slots</h2>
       <p class="hint">One slot = one seat. Create a whole table at a time.</p>
       <div class="panel">
         <form id="slotForm">
@@ -224,7 +250,7 @@
 
     <!-- 4. LINK BASE -->
     <section class="block">
-      <h2><span class="step">4</span> Link to Send</h2>
+      <h2><span class="step">5</span> Link to Send</h2>
       <p class="hint">This is taken from this page's own address, so you normally do not need to touch it. Change it only if you have your own domain.</p>
       <div class="panel">
         <div class="field">
@@ -238,7 +264,7 @@
 
     <!-- 5. BOARD -->
     <section class="block">
-      <h2><span class="step">5</span> Seat Board</h2>
+      <h2><span class="step">6</span> Seat Board</h2>
       <p class="hint">Put a guest's name on a seat, copy the link, and send it over Messenger or Viber. When they confirm, the seat locks itself.</p>
 
       <div id="stats" style="margin-bottom:16px"></div>
@@ -251,17 +277,18 @@
         <button class="chip" data-filter="declined" type="button">Not coming</button>
         <input type="search" id="search" placeholder="Search a name or seat…" />
         <button class="chip" id="deleteAllSlotsBtn" type="button"
-                style="margin-left:auto;border-color:rgba(240,138,138,0.3);color:var(--no)">Delete all seats</button>
+                style="margin-left:auto;border-color:color-mix(in srgb, var(--no) 32%, transparent);color:var(--no)">Delete all seats</button>
       </div>
 
       <div id="slotList"></div>
-      <p id="emptySlots" class="muted small hidden">No seats yet. Create some in Step 3.</p>
+      <p id="emptySlots" class="muted small hidden">No seats yet. Create some in Step 4.</p>
     </section>
   </div>
 </div>
 
 <div id="toast"></div>
 <script src="app/config.js"></script>
+<script src="app/themes.js"></script>
 <script src="app/admin.js"></script>
 </body>
 </html>

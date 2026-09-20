@@ -210,8 +210,10 @@
   function render() {
     renderEvents();
     var ev = currentEvent();
+    window.abyApplyTheme(ev ? ev.theme : '');
     $('eventScope').classList.toggle('hidden', !ev);
     if (!ev) return;
+    renderThemes(ev);
     fillDetailForm(ev);
     refreshLinkNotes();
     renderStats();
@@ -240,11 +242,46 @@
     });
   }
 
+  /* Swatch colours come from app/themes.js, never from stored data, so they
+     are safe to drop straight into a style attribute. */
+  function renderThemes(ev) {
+    var host = $('themeGrid');
+    var current = ev.theme || window.ABY_DEFAULT_THEME;
+
+    host.innerHTML = window.ABY_THEMES.map(function (t) {
+      return '<button type="button" class="theme-card' + (t.id === current ? ' active' : '') +
+        '" data-theme-id="' + escapeHtml(t.id) + '">' +
+        '<span class="preview" style="background:' + t.swatch[0] + '">' +
+          '<span class="dot" style="background:' + t.swatch[1] + '"></span>' +
+          '<span class="dot" style="background:' + t.swatch[2] + '"></span>' +
+          '<span class="bar" style="background:' + t.swatch[1] + '"></span>' +
+        '</span>' +
+        '<span class="meta">' +
+          (t.id === current ? '<span class="tcheck">&#10003;</span>' : '') +
+          '<span class="tname">' + escapeHtml(t.name) + '</span>' +
+          '<span class="tnote">' + escapeHtml(t.note) + '</span>' +
+        '</span></button>';
+    }).join('');
+
+    Array.prototype.forEach.call(host.querySelectorAll('[data-theme-id]'), function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-theme-id');
+        if (id === current) return;
+        window.abyApplyTheme(id); // show it immediately, then save
+        api('/events/' + ev.id, { method: 'PATCH', body: { theme: id } })
+          .then(load)
+          .then(function () { toast('Theme saved.'); })
+          .catch(function (err) { window.abyApplyTheme(current); fail(err); });
+      });
+    });
+  }
+
   function fillDetailForm(ev) {
     var map = {
       'd-title': ev.title, 'd-celebrant': ev.celebrant, 'd-nickname': ev.nickname,
       'd-birthDate': ev.birthDate, 'd-eventDate': ev.eventDate, 'd-startTime': ev.startTime,
-      'd-venue': ev.venue, 'd-dressCode': ev.dressCode, 'd-rsvpDeadline': ev.rsvpDeadline,
+      'd-venue': ev.venue, 'd-venueMapUrl': ev.venueMapUrl, 'd-dressCode': ev.dressCode,
+      'd-rsvpDeadline': ev.rsvpDeadline,
       'd-hostName': ev.hostName, 'd-note': ev.note,
     };
     Object.keys(map).forEach(function (id) {
@@ -385,7 +422,7 @@
     e.preventDefault();
     var body = {};
     ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate', 'startTime',
-      'venue', 'dressCode', 'rsvpDeadline', 'hostName', 'note'].forEach(function (f) {
+      'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note'].forEach(function (f) {
       body[f] = $('ev-' + f).value;
     });
     api('/events', { method: 'POST', body: body }).then(function (ev) {
@@ -399,7 +436,7 @@
     e.preventDefault();
     var body = {};
     ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate', 'startTime',
-      'venue', 'dressCode', 'rsvpDeadline', 'hostName', 'note'].forEach(function (f) {
+      'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note'].forEach(function (f) {
       body[f] = $('d-' + f).value;
     });
     api('/events/' + state.eventId, { method: 'PATCH', body: body })

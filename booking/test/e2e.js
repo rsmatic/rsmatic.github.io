@@ -32,8 +32,32 @@ async function call(path, opts = {}) {
   return { status: res.status, j };
 }
 
+/* The server validates theme ids against api/core.js; the admin console draws
+   its picker from app/themes.js. If those two lists drift, every theme in the
+   picker that the server does not know would fail to save. */
+async function checkThemeListsAgree() {
+  const { readFileSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const { dirname, join } = await import('node:path');
+  const here = dirname(fileURLToPath(import.meta.url));
+
+  const { THEMES } = await import('../api/core.js');
+  const source = readFileSync(join(here, '..', 'app', 'themes.js'), 'utf8');
+  const uiIds = [...source.matchAll(/\{\s*id:\s*'([^']+)'/g)].map((m) => m[1]);
+
+  ok('app/themes.js offers 10 themes', uiIds.length === 10, String(uiIds.length));
+  ok('the picker and the server agree on theme ids',
+    uiIds.join(',') === THEMES.join(','), uiIds.join(',') + ' vs ' + THEMES.join(','));
+}
+
 async function main() {
   console.log('Testing ' + API + '\n');
+
+  console.log('== theme lists ==');
+  await checkThemeListsAgree().catch((err) => {
+    failed += 1;
+    console.log('  FAIL  could not compare the theme lists -> ' + err.message);
+  });
 
   console.log('== admin key ==');
   ok('no key -> 401', (await call('/api/events', { admin: false })).status === 401);
@@ -48,6 +72,29 @@ async function main() {
   ok('event without a date -> 400', (await call('/api/events', { method: 'POST', body: { title: 'No date' } })).status === 400);
   r = await call('/api/events/' + eventId, { method: 'PATCH', body: { venue: 'Bahay namin' } });
   ok('update event', r.j.venue === 'Bahay namin', JSON.stringify(r.j));
+
+  console.log('\n== theme ==');
+  ok('a new event falls back to the default theme', r.j.theme === 'rose-gold', r.j.theme);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { theme: 'midnight' } });
+  ok('a known theme is stored', r.j.theme === 'midnight', r.j.theme);
+  ok('an unknown theme -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { theme: 'neon-disco' } })).status === 400);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { theme: '' } });
+  ok('an empty theme returns to the default', r.j.theme === 'rose-gold', r.j.theme);
+  await call('/api/events/' + eventId, { method: 'PATCH', body: { theme: 'emerald' } });
+
+  console.log('\n== venue map link ==');
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: 'https://maps.app.goo.gl/abc123' } });
+  ok('an https link is kept', r.j.venueMapUrl === 'https://maps.app.goo.gl/abc123', r.j.venueMapUrl);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: 'maps.app.goo.gl/xyz' } });
+  ok('a bare domain becomes https', r.j.venueMapUrl === 'https://maps.app.goo.gl/xyz', r.j.venueMapUrl);
+  ok('a javascript: link -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: 'javascript:alert(1)' } })).status === 400);
+  ok('a data: link -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: 'data:text/html,<script>' } })).status === 400);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: '' } });
+  ok('an empty link clears it', r.j.venueMapUrl === '', JSON.stringify(r.j.venueMapUrl));
+  await call('/api/events/' + eventId, { method: 'PATCH', body: { venueMapUrl: 'https://maps.example/venue' } });
 
   console.log('\n== slots ==');
   r = await call('/api/events/' + eventId + '/slots', { method: 'POST', body: { table: 'Table 1', count: 3, startAt: 1 } });
@@ -66,6 +113,9 @@ async function main() {
   ok('guest sees their own seat + name', r.j.label === a.label && r.j.guestName === 'Juan Dela Cruz');
   ok('token is NOT echoed back to the guest page', !('token' in r.j));
   ok('event details reach the guest', r.j.event.venue === 'Bahay namin');
+  ok('the theme reaches the guest page', r.j.event.theme === 'emerald', r.j.event.theme);
+  ok('the map link reaches the guest page', r.j.event.venueMapUrl === 'https://maps.example/venue',
+    r.j.event.venueMapUrl);
 
   console.log('\n== guest confirms ==');
   r = await call('/api/invite/' + a.token, { admin: false, method: 'POST', body: { attending: true, message: 'Happy birthday Aby!' } });
