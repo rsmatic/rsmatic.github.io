@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS events (
   theme        TEXT,
   ageDisplay   TEXT,
   ageLabel     TEXT,
+  seatDisplay  TEXT,
   photoShape   TEXT,
   photoSize    TEXT,
   borderStyle  TEXT,
@@ -60,11 +61,11 @@ CREATE INDEX IF NOT EXISTS idx_events_coordinator ON events (coordinatorKey);
 -- Ang event ni Aby, handa na.
 INSERT OR IGNORE INTO events
   (id, title, celebrant, nickname, birthDate, eventDate, startTime, venue, venueMapUrl,
-   dressCode, note, rsvpDeadline, hostName, theme, ageDisplay, ageLabel,
+   dressCode, note, rsvpDeadline, hostName, theme, ageDisplay, ageLabel, seatDisplay,
    photoShape, photoSize, borderStyle, cardCorners, cardAlign, accentColor, borderColor,
    photoUpdatedAt, coordinatorKey, createdAt)
 VALUES
   ('evt_aby41', 'Aby''s 41st Birthday', 'Mary Abegail Matic', 'Aby', '1985-10-25', '2026-10-25',
-   '18:00', '', '', '', '', '2026-10-18', 'Rexter Matic', 'rose-gold', 'number', '',
+   '18:00', '', '', '', '', '2026-10-18', 'Rexter Matic', 'rose-gold', 'number', '', 'full',
    'circle', 'medium', 'double', 'soft', 'center', '', '', '', '',
    '2026-09-20T00:00:00.000Z');

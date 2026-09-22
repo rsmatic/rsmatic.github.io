@@ -205,6 +205,21 @@ async function main() {
   ok('the wording is capped at 40 characters', r.j.ageLabel.length === 40, String(r.j.ageLabel.length));
   await call('/api/events/' + eventId, { method: 'PATCH', body: { ageDisplay: 'custom', ageLabel: 'Fourtis' } });
 
+  console.log('\n== seats on the invitation ==');
+  r = await call('/api/events');
+  ok('a new event names the seats by default',
+    r.j.events.find((e) => e.id === eventId).seatDisplay === 'full',
+    r.j.events.find((e) => e.id === eventId).seatDisplay);
+  ok('the seat numbers can be hidden',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { seatDisplay: 'hidden' } })).j.seatDisplay === 'hidden');
+  ok('only the count can be shown',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { seatDisplay: 'count' } })).j.seatDisplay === 'count');
+  ok('an unknown seat display -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { seatDisplay: 'semaphore' } })).status === 400);
+  ok('an empty value returns to naming the seats',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { seatDisplay: '' } })).j.seatDisplay === 'full');
+  await call('/api/events/' + eventId, { method: 'PATCH', body: { seatDisplay: 'count' } });
+
   console.log('\n== invitation design ==');
   r = await call('/api/events');
   const design = r.j.events.find((e) => e.id === eventId);
@@ -296,6 +311,8 @@ async function main() {
   ok('token is NOT echoed back to the guest page', !('token' in r.j));
   ok('event details reach the guest', r.j.event.venue === 'Bahay namin');
   ok('the theme reaches the guest page', r.j.event.theme === 'emerald', r.j.event.theme);
+  ok('the seat display choice reaches the guest page',
+    r.j.event.seatDisplay === 'count', r.j.event.seatDisplay);
   ok('the age wording reaches the guest page',
     r.j.event.ageDisplay === 'custom' && r.j.event.ageLabel === 'Fourtis',
     r.j.event.ageDisplay + ' / ' + r.j.event.ageLabel);

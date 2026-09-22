@@ -14,7 +14,7 @@ export class HttpError extends Error {
 
 export const EVENT_FIELDS = ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
   'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
-  'theme', 'ageDisplay', 'ageLabel',
+  'theme', 'ageDisplay', 'ageLabel', 'seatDisplay',
   'photoShape', 'photoSize', 'borderStyle', 'cardCorners', 'cardAlign',
   'accentColor', 'borderColor'];
 
@@ -41,6 +41,10 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 /** What stands above the celebrant's name on the invitation. */
 export const AGE_DISPLAYS = ['number', 'custom', 'hidden'];
 export const DEFAULT_AGE_DISPLAY = 'number';
+
+/** How much of the seating the guest is told: which seats, how many, or neither. */
+export const SEAT_DISPLAYS = ['full', 'count', 'hidden'];
+export const DEFAULT_SEAT_DISPLAY = 'full';
 
 /** Keep in sync with app/themes.js — the ids are the same list. */
 export const THEMES = ['rose-gold', 'midnight', 'emerald', 'burgundy', 'noir',
@@ -99,6 +103,13 @@ function normalizeAgeDisplay(value) {
   const mode = str(value);
   if (!mode) return DEFAULT_AGE_DISPLAY;
   if (!AGE_DISPLAYS.includes(mode)) throw new HttpError(400, 'Unknown age display: ' + mode);
+  return mode;
+}
+
+function normalizeSeatDisplay(value) {
+  const mode = str(value);
+  if (!mode) return DEFAULT_SEAT_DISPLAY;
+  if (!SEAT_DISPLAYS.includes(mode)) throw new HttpError(400, 'Unknown seat display: ' + mode);
   return mode;
 }
 
@@ -247,6 +258,7 @@ function publicSlotView(slot, event, seats) {
       theme: event.theme,
       ageDisplay: event.ageDisplay,
       ageLabel: event.ageLabel,
+      seatDisplay: event.seatDisplay,
       photoShape: event.photoShape,
       photoSize: event.photoSize,
       borderStyle: event.borderStyle,
@@ -406,6 +418,7 @@ export function createApi({ store, adminKey }) {
         event.venueMapUrl = normalizeUrl(body.venueMapUrl);
         event.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
         event.ageLabel = str(body.ageLabel).slice(0, 40);
+        event.seatDisplay = normalizeSeatDisplay(body.seatDisplay);
         event.photoUpdatedAt = '';
         applyDesign(event, body, true);
         await store.createEvent(event);
@@ -504,6 +517,7 @@ export function createApi({ store, adminKey }) {
         if ('venueMapUrl' in body) patch.venueMapUrl = normalizeUrl(body.venueMapUrl);
         if ('ageDisplay' in body) patch.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
         if ('ageLabel' in body) patch.ageLabel = str(body.ageLabel).slice(0, 40);
+        if ('seatDisplay' in body) patch.seatDisplay = normalizeSeatDisplay(body.seatDisplay);
         applyDesign(patch, body, false);
         const updated = await store.updateEvent(eventId, patch);
         if (!updated) throw new HttpError(404, 'Event not found.');

@@ -172,6 +172,21 @@ Para magdagdag ng tema: magdagdag ng bloke sa `app/styles.css`, ng entry sa
 [`app/themes.js`](app/themes.js), at ng id sa `THEMES` sa
 [`api/core.js`](api/core.js). May test na tumitiyak na magkatugma ang huling dalawa.
 
+### Upuan sa imbitasyon
+
+Sa **Step 2 — Event Details** may *Seats on the invitation*. Kapag isang pangalan ang
+humahawak ng maraming upuan (hal. isang pamilya), madalas ay walang saysay sa kanila
+ang mismong numero ng upuan.
+
+| Pagpipilian | Sa imbitasyon |
+|---|---|
+| **Table and seat numbers** (default) | *TABLE · SEATS 1, 2, 3, 4* at *4 seats are reserved in your name.* |
+| **How many seats only** | *4 seats are reserved in your name.* lang — walang numero ng upuan |
+| **Hide** | wala sa dalawa |
+
+Sinusunod din ito ng mensaheng kinokopya mo at ng recap pagkatapos sumagot ng bisita,
+para hindi mababanggit doon ang itinago mo sa imbitasyon.
+
 ### Edad sa imbitasyon
 
 Sa **Step 2 — Event Details** may *Age on the invitation* na tatlo ang pagpipilian:
@@ -244,6 +259,7 @@ npx wrangler d1 execute aby41 --remote --file=worker/migrations/0001-theme-and-m
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0002-age-label.sql --config worker/wrangler.toml
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0003-design-and-photo.sql --config worker/wrangler.toml
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0004-coordinator.sql --config worker/wrangler.toml
+npx wrangler d1 execute aby41 --remote --file=worker/migrations/0005-seat-display.sql --config worker/wrangler.toml
 ```
 
 Para sa bagong database, sapat na ang `schema.sql` — nandoon na ang lahat ng column.
@@ -324,7 +340,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            133 checks laban sa tumatakbong server
+    ├── e2e.js            139 checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 

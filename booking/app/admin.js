@@ -383,6 +383,7 @@
       'd-rsvpDeadline': ev.rsvpDeadline,
       'd-hostName': ev.hostName, 'd-note': ev.note,
       'd-ageDisplay': ev.ageDisplay || 'number', 'd-ageLabel': ev.ageLabel,
+      'd-seatDisplay': ev.seatDisplay || 'full',
     };
     Object.keys(map).forEach(function (id) {
       var el = $(id);
@@ -446,7 +447,7 @@
     var body = {};
     ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate', 'startTime',
       'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note',
-      'ageDisplay', 'ageLabel'].forEach(function (f) {
+      'ageDisplay', 'ageLabel', 'seatDisplay'].forEach(function (f) {
       body[f] = $('ev-' + f).value;
     });
     api('/events', { method: 'POST', body: body }).then(function (ev) {
@@ -461,7 +462,7 @@
     var body = {};
     ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate', 'startTime',
       'venue', 'venueMapUrl', 'dressCode', 'rsvpDeadline', 'hostName', 'note',
-      'ageDisplay', 'ageLabel'].forEach(function (f) {
+      'ageDisplay', 'ageLabel', 'seatDisplay'].forEach(function (f) {
       body[f] = $('d-' + f).value;
     });
     api('/events/' + state.eventId, { method: 'PATCH', body: body })

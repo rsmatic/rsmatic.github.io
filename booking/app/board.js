@@ -92,8 +92,14 @@
     if (ev.venue) lines.push('Venue: ' + ev.venue);
     if (ev.dressCode) lines.push('Dress code: ' + ev.dressCode);
     var seats = seatsForGuest(allSlots, slot);
-    lines.push('Reserved for you: ' + seatSummary(seats) +
-      (seats.length > 1 ? '  (' + seats.length + ' seats)' : ''));
+    var seatMode = ev.seatDisplay || 'full';
+    if (seatMode === 'full') {
+      lines.push('Reserved for you: ' + seatSummary(seats) +
+        (seats.length > 1 ? '  (' + seats.length + ' seats)' : ''));
+    } else if (seatMode === 'count') {
+      lines.push('Reserved for you: ' + seats.length +
+        (seats.length > 1 ? ' seats' : ' seat'));
+    }
     lines.push('');
     lines.push('Please let us know here if you can make it:');
     lines.push(link);

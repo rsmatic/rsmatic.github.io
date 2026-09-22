@@ -192,14 +192,24 @@
     var seats = (slot.seats && slot.seats.length)
       ? slot.seats
       : [{ table: slot.table, seat: slot.seat, label: slot.label }];
-    $('c-seat').textContent = window.AbyBoard.seatSummary(seats);
+
+    // The host decides how much of the seating the guest is told.
+    var seatMode = ev.seatDisplay || 'full';
+    var seatLine = $('c-seat');
     var seatNote = $('c-seatnote');
-    if (seats.length > 1) {
-      seatNote.textContent = seats.length + ' seats are reserved in your name.';
-      seatNote.classList.remove('hidden');
-    } else {
-      seatNote.classList.add('hidden');
+
+    seatLine.textContent = seatMode === 'full' ? window.AbyBoard.seatSummary(seats) : '';
+    seatLine.classList.toggle('hidden', seatMode !== 'full');
+
+    var noteText = '';
+    if (seatMode === 'count') {
+      noteText = seats.length + (seats.length > 1 ? ' seats are' : ' seat is') +
+        ' reserved in your name.';
+    } else if (seatMode === 'full' && seats.length > 1) {
+      noteText = seats.length + ' seats are reserved in your name.';
     }
+    seatNote.textContent = noteText;
+    seatNote.classList.toggle('hidden', !noteText);
 
     if (ev.note) {
       $('c-note').textContent = ev.note;
@@ -235,6 +245,17 @@
 
   function seatCount(s) { return (s.seats && s.seats.length) || 1; }
 
+  /** Matches what the invitation showed, so the recap never says more. */
+  function seatRecap(s) {
+    var mode = (s.event && s.event.seatDisplay) || 'full';
+    if (mode === 'hidden') return '';
+    if (mode === 'count') {
+      return '<div><b>Seats:</b> ' + seatCount(s) + '</div>';
+    }
+    return '<div><b>' + (seatCount(s) > 1 ? 'Seats' : 'Seat') + ':</b> ' +
+      escapeHtml(window.AbyBoard.seatSummary(s.seats || [])) + '</div>';
+  }
+
   function renderResult() {
     $('askBox').classList.add('hidden');
     $('resultBox').classList.remove('hidden');
@@ -251,8 +272,7 @@
 
     var rows = [
       '<div><b>Guest:</b> ' + escapeHtml(slot.guestName || '—') + '</div>',
-      '<div><b>' + (seatCount(slot) > 1 ? 'Seats' : 'Seat') + ':</b> ' +
-        escapeHtml(window.AbyBoard.seatSummary(slot.seats || [])) + '</div>',
+      seatRecap(slot),
       '<div><b>Answer:</b> ' + (attending ? 'Coming' : 'Not coming') + '</div>',
     ];
     if (!attending && slot.reason) rows.push('<div><b>Reason:</b> ' + escapeHtml(slot.reason) + '</div>');
