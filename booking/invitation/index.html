@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Invitation</title>
+<meta property="og:title" content="You have an invitation" />
+<meta property="og:description" content="Please let us know if you can come." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23170e14'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' fill='%23e7c27d' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../app/styles.css" />
+<style>
+  .wrap { max-width: 560px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  .card {
+    border: 1px solid var(--frame);
+    border-radius: 20px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, transparent), color-mix(in srgb, var(--text) 2%, transparent));
+    padding: 30px 24px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::after {
+    content: '';
+    position: absolute; inset: 7px;
+    border: 1px solid color-mix(in srgb, var(--frame) 65%, transparent);
+    border-radius: 14px;
+    pointer-events: none;
+  }
+
+  /* ---- options the host picks in the admin console ---- */
+  .card[data-corners="sharp"] { border-radius: 3px; }
+  .card[data-corners="sharp"]::after { border-radius: 0; }
+  .card[data-corners="round"] { border-radius: 34px; }
+  .card[data-corners="round"]::after { border-radius: 28px; }
+
+  .card[data-border="none"] { border-color: transparent; }
+  .card[data-border="none"]::after { display: none; }
+  .card[data-border="thin"]::after { display: none; }
+  .card[data-border="dashed"] { border-style: dashed; border-width: 2px; }
+  .card[data-border="dashed"]::after { display: none; }
+
+  .card[data-align="left"] .crest,
+  .card[data-align="left"] .seat-strip,
+  .card[data-align="left"] .ask > h2,
+  .card[data-align="left"] .ask > p,
+  .card[data-align="left"] #c-note { text-align: left; }
+  .card[data-align="left"] .photo-wrap { justify-content: flex-start; }
+  .card[data-align="left"] .crest .rule { margin-left: 0; }
+
+  .photo-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
+  .photo-wrap img {
+    width: var(--photo-w, 164px); aspect-ratio: 1 / 1; object-fit: cover; display: block;
+    border: 1px solid var(--frame); background: var(--ink-2);
+  }
+  .card[data-photo-size="small"] { --photo-w: 112px; }
+  .card[data-photo-size="medium"] { --photo-w: 164px; }
+  .card[data-photo-size="large"] { --photo-w: 224px; }
+  .card[data-photo-shape="circle"] .photo-wrap img { border-radius: 50%; }
+  .card[data-photo-shape="rounded"] .photo-wrap img { border-radius: 20px; }
+  .card[data-photo-shape="square"] .photo-wrap img { border-radius: 0; }
+  .card[data-photo-shape="arch"] .photo-wrap img {
+    aspect-ratio: 3 / 4; border-radius: 999px 999px 16px 16px;
+  }
+
+  .crest { text-align: center; margin-bottom: 20px; }
+  .crest .rule {
+    width: 54px; height: 1px; background: var(--gold-dim); margin: 12px auto;
+  }
+  .crest .age {
+    font-family: var(--serif); font-size: clamp(46px, 15vw, 62px);
+    line-height: 1; color: var(--gold);
+  }
+  /* Words need to wrap and sit smaller than a two-digit number. */
+  .crest .age.word {
+    font-size: clamp(30px, 9vw, 44px); line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+  .crest .name {
+    font-family: var(--serif); font-size: 32px; line-height: 1.15; margin-top: 2px;
+  }
+  .crest .sub { color: var(--dim); font-size: 13px; }
+
+  dl.facts { margin: 22px 0 0; display: grid; gap: 1px; background: var(--line-soft); border-radius: 12px; overflow: hidden; }
+  dl.facts > div {
+    display: grid; grid-template-columns: 96px 1fr; gap: 12px;
+    background: var(--ink-2); padding: 12px 14px;
+  }
+  dl.facts dt { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dim); font-weight: 600; align-self: center; }
+  dl.facts dd { margin: 0; font-size: 15px; }
+
+  .map-link {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 12px; padding: 12px 16px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--accent-soft);
+    color: var(--gold); text-decoration: none; font-size: 14px; font-weight: 600;
+  }
+  .map-link:hover { background: var(--accent-soft-2); }
+  .map-link .pin { font-size: 16px; }
+
+  .seat-strip {
+    margin-top: 18px; text-align: center; padding: 16px;
+    border: 1px dashed var(--line); border-radius: 12px;
+    background: color-mix(in srgb, var(--gold) 6%, transparent);
+  }
+  .seat-strip .who { font-family: var(--serif); font-size: 25px; }
+  .seat-strip .where { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 4px; font-weight: 600; }
+  .seat-strip .held { font-size: 12px; color: var(--dim); margin-top: 7px; }
+
+  .ask { margin-top: 26px; }
+  .ask h2 { font-size: 23px; text-align: center; }
+  .ask > p { text-align: center; color: var(--dim); font-size: 13px; margin: 4px 0 18px; }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .choice {
+    padding: 18px 12px; border-radius: 14px; cursor: pointer; text-align: center;
+    border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 4%, transparent);
+    font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text);
+    line-height: 1.35;
+  }
+  .choice .mark { display: block; font-size: 22px; margin-bottom: 6px; }
+  .choice:hover { background: var(--hover); }
+  .choice.yes.sel { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+  .choice.no.sel { border-color: var(--no); background: color-mix(in srgb, var(--no) 13%, transparent); color: var(--no); }
+
+  #reasonBox, #messageBox { margin-top: 16px; }
+  #submitBtn { width: 100%; margin-top: 18px; padding: 14px; font-size: 15px; }
+
+  /* result state */
+  .result { text-align: center; padding: 6px 0 0; }
+  .result .icon { font-size: 46px; line-height: 1; }
+  .result h2 { font-size: 27px; margin: 10px 0 6px; }
+  .result p { color: var(--dim); font-size: 14px; margin: 0 auto; max-width: 40ch; }
+  .result .recap {
+    margin-top: 20px; padding: 14px; border-radius: 12px;
+    background: var(--ink-2); font-size: 14px; text-align: left;
+  }
+  .result .recap b { color: var(--dim); font-weight: 600; }
+  .result button { margin-top: 20px; }
+
+  .state { text-align: center; padding: 60px 20px; color: var(--dim); }
+  .state h2 { color: var(--text); font-size: 25px; margin-bottom: 8px; }
+
+  .footer { text-align: center; color: var(--faint); font-size: 12px; margin-top: 24px; }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 420px) {
+    .choices { grid-template-columns: 1fr; }
+    dl.facts > div { grid-template-columns: 78px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loading" class="state"><p>Opening your invitation…</p></div>
+
+  <div id="invalid" class="state hidden">
+    <h2>Invitation not found</h2>
+    <p>The link may be wrong, or it may have been replaced. Please ask whoever invited you for a new one.</p>
+  </div>
+
+  <div id="card" class="card hidden">
+    <div class="photo-wrap hidden" id="c-photo-wrap"><img id="c-photo" alt="" /></div>
+
+    <div class="crest">
+      <div class="eyebrow" id="c-eyebrow">Invitation</div>
+      <div class="age hidden" id="c-age"></div>
+      <div class="name" id="c-name"></div>
+      <div class="rule"></div>
+      <div class="sub" id="c-sub"></div>
+    </div>
+
+    <dl class="facts" id="c-facts"></dl>
+
+    <a id="c-map" class="map-link hidden" target="_blank" rel="noopener noreferrer">
+      <span class="pin">&#9906;</span> Open the venue in Maps
+    </a>
+
+    <div class="seat-strip">
+      <div class="who" id="c-guest"></div>
+      <div class="where" id="c-seat"></div>
+      <div class="held hidden" id="c-seatnote"></div>
+    </div>
+
+    <div id="c-note" class="small muted hidden" style="margin-top:16px;text-align:center"></div>
+
+    <!-- ask -->
+    <div class="ask hidden" id="askBox">
+      <h2>Can you make it?</h2>
+      <p id="deadlineNote"></p>
+
+      <div class="choices">
+        <button type="button" class="choice yes" id="choiceYes"><span class="mark">&#10003;</span>Yes, I can come</button>
+        <button type="button" class="choice no" id="choiceNo"><span class="mark">&#10005;</span>Sorry, I cannot come</button>
+      </div>
+
+      <div id="reasonBox" class="hidden">
+        <label for="reason">Reason *</label>
+        <textarea id="reason" placeholder="For example: I have work that day."></textarea>
+      </div>
+
+      <div id="messageBox" class="hidden">
+        <label for="message">A short message for the celebrant (optional)</label>
+        <textarea id="message" placeholder="Happy birthday!"></textarea>
+      </div>
+
+      <button class="primary" id="submitBtn" type="button" disabled>Send my answer</button>
+    </div>
+
+    <!-- result -->
+    <div class="result hidden" id="resultBox">
+      <div class="icon" id="r-icon"></div>
+      <h2 id="r-title"></h2>
+      <p id="r-body"></p>
+      <div class="recap" id="r-recap"></div>
+      <button class="ghost" id="changeBtn" type="button">Change my answer</button>
+    </div>
+  </div>
+
+  <p class="footer" id="footer"></p>
+</div>
+
+<div id="toast"></div>
+<script src="../app/config.js"></script>
+<script src="../app/themes.js"></script>
+<script src="../app/board.js"></script>
+<script src="../app/invite.js"></script>
+</body>
+</html>

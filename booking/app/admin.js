@@ -88,11 +88,11 @@
     return (typed || pageBase()).replace(/\/+$/, '') + '/';
   }
 
-  function inviteLink(slot) { return baseUrl() + 'i.html?t=' + slot.token; }
+  function inviteLink(slot) { return baseUrl() + 'invitation?t=' + slot.token; }
 
   function refreshLinkNotes() {
     var sample = $('baseSample');
-    if (sample) sample.textContent = baseUrl() + 'i.html?t=xxxxxxxxxxxxx';
+    if (sample) sample.textContent = baseUrl() + 'invitation?t=xxxxxxxxxxxxx';
     var note = $('apiNote');
     if (note) note.textContent = apiBase() || window.location.origin + '  (same origin)';
   }
@@ -353,7 +353,7 @@
   /* ---- coordinator access ---- */
 
   function coordinatorPageUrl() {
-    return baseUrl() + 'c.html';
+    return baseUrl() + 'coordinator';
   }
 
   function renderCoordinator(ev) {

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Coordinator — Guest List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23170e14'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%23e7c27d' font-family='Georgia,serif'%3EC%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="../app/styles.css" />
+<style>
+  .shell { max-width: 1120px; margin: 0 auto; padding: 28px 16px 80px; }
+
+  header.top {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
+    border-bottom: 1px solid var(--line-soft); padding-bottom: 18px;
+  }
+  header.top h1 { font-size: 30px; line-height: 1.15; }
+  header.top h1 span { color: var(--gold); }
+
+  section.block { margin-bottom: 22px; }
+  section.block > h2 { font-size: 21px; margin-bottom: 4px; }
+  section.block > .hint { color: var(--dim); font-size: 13px; margin-bottom: 14px; }
+
+  .event-summary {
+    padding: 16px 18px; border-radius: var(--radius);
+    background: var(--panel); border: 1px solid var(--line-soft); margin-bottom: 18px;
+  }
+  .event-summary .name { font-family: var(--serif); font-size: 23px; }
+  .event-summary .meta { font-size: 13px; color: var(--dim); margin-top: 4px; }
+
+  #stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 12px; }
+  .stat { padding: 14px 16px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line-soft); }
+  .stat .n { font-family: var(--serif); font-size: 30px; line-height: 1.1; }
+  .stat .k { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-top: 2px; }
+  .stat.ok .n { color: var(--ok); }
+  .stat.no .n { color: var(--no); }
+  .stat.wait .n { color: var(--wait); }
+  .stat.open .n { color: var(--open); }
+
+  #slotList { display: flex; flex-direction: column; gap: 10px; }
+  .slot {
+    border: 1px solid var(--line-soft); border-radius: var(--radius);
+    background: var(--panel); padding: 14px 16px;
+    display: grid; gap: 12px;
+    grid-template-columns: 132px minmax(160px, 1fr) minmax(140px, 0.7fr) auto;
+    align-items: center;
+  }
+  .slot.confirmed { border-color: color-mix(in srgb, var(--ok) 42%, transparent); background: color-mix(in srgb, var(--ok) 7%, transparent); }
+  .slot.declined { border-color: color-mix(in srgb, var(--no) 30%, transparent); background: color-mix(in srgb, var(--no) 6%, transparent); }
+  .slot .seat { font-family: var(--serif); font-size: 17px; }
+  .slot .seat small { display: block; font-family: var(--sans); font-size: 11px; color: var(--faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .slot .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .slot .value { font-size: 15px; }
+  .slot .value.empty { color: var(--faint); }
+  .slot .note {
+    grid-column: 1 / -1; font-size: 13px; padding: 10px 12px;
+    border-radius: 10px; background: var(--ink-2); border-left: 3px solid var(--line);
+  }
+  .slot .note b { color: var(--dim); font-weight: 600; }
+  .slot .note.declined { border-left-color: var(--no); }
+  .slot .note.confirmed { border-left-color: var(--ok); }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .toolbar input[type="search"] { max-width: 260px; }
+  .chip {
+    font-size: 12px; padding: 7px 13px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line-soft); background: transparent; color: var(--dim); font-weight: 600;
+  }
+  .chip.active { border-color: var(--gold); color: var(--gold); background: var(--accent-soft); }
+
+  #gate {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--ink); display: grid; place-items: center; padding: 20px;
+  }
+  #gate .box { width: 100%; max-width: 380px; text-align: center; }
+  #gate h1 { font-size: 30px; margin-bottom: 4px; }
+  #gate p { color: var(--dim); font-size: 13px; margin: 0 0 20px; }
+  #gate button { width: 100%; margin-top: 12px; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 760px) {
+    .slot { grid-template-columns: 1fr; }
+    .slot .actions { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="box">
+    <div class="eyebrow">Booking System</div>
+    <h1>Coordinator</h1>
+    <p>Enter the coordinator key you were given.</p>
+    <form id="gateForm">
+      <input id="gateKey" type="password" placeholder="Coordinator key" autocomplete="current-password" />
+      <button class="primary" type="submit">Enter</button>
+    </form>
+    <p id="gateError" class="hidden" style="color:var(--no);margin-top:14px"></p>
+  </div>
+</div>
+
+<div class="shell hidden" id="app">
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">Coordinator</div>
+      <h1>Guest <span>List</span></h1>
+    </div>
+    <div class="row">
+      <span class="tiny-text muted" id="syncNote">—</span>
+      <button class="ghost tiny" id="refreshBtn" type="button">Refresh</button>
+      <button class="ghost tiny" id="lockBtn" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <div class="event-summary">
+    <div class="name" id="ev-name"></div>
+    <div class="meta" id="ev-meta"></div>
+  </div>
+
+  <section class="block">
+    <h2>Seats</h2>
+    <p class="hint">Who is coming and who is not. This list refreshes on its own as guests reply.</p>
+
+    <div id="stats" style="margin-bottom:16px"></div>
+
+    <div class="toolbar">
+      <button class="chip active" data-filter="all" type="button">All</button>
+      <button class="chip" data-filter="open" type="button">Open</button>
+      <button class="chip" data-filter="invited" type="button">Awaiting reply</button>
+      <button class="chip" data-filter="confirmed" type="button">Confirmed</button>
+      <button class="chip" data-filter="declined" type="button">Not coming</button>
+      <input type="search" id="search" placeholder="Search a name or seat…" />
+    </div>
+
+    <div id="slotList"></div>
+    <p id="emptySlots" class="muted small hidden">No seats yet. The host creates them in the admin console.</p>
+  </section>
+</div>
+
+<div id="toast"></div>
+<script src="../app/config.js"></script>
+<script src="../app/themes.js"></script>
+<script src="../app/board.js"></script>
+<script src="../app/coordinator.js"></script>
+</body>
+</html>

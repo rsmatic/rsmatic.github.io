@@ -17,7 +17,8 @@ nagse-save ng data. Isang linya sa [`app/config.js`](app/config.js) ang nag-uugn
 ```
 https://rsmatic.github.io/booking/        GitHub Pages (static)
   ├── index.html    admin console
-  ├── i.html        page ng bisita
+  ├── invitation/   page ng bisita
+  ├── coordinator/  guest list ng coordinator
   └── app/config.js  ←  dito nakasulat ang URL ng Worker
               │
               │  fetch()
@@ -92,7 +93,7 @@ Pagkatapos ng ilang minuto, gagana na ang <https://rsmatic.github.io/booking/>.
 ## Ang daloy
 
 1. **Gumawa ng event** sa admin — o gamitin na lang ang naka-handa nang `Aby's 41st Birthday`.
-2. **Pumili ng tema** — sampung tema ang mapagpipilian (anim na madilim, apat na maliwanag).
+2. **Pumili ng tema** — dalawampung tema ang mapagpipilian, naka-grupo ayon sa okasyon.
    Agad itong nakikita sa admin, at iyon din ang makikita ng bisita sa imbitasyon nila.
 3. **Gumawa ng slots** — isang slot = isang upuan. Bawat pindot ay gumagawa ng buong mesa
    (halimbawa: `Table 1`, 10 upuan).
@@ -106,7 +107,7 @@ Pagkatapos ng ilang minuto, gagana na ang <https://rsmatic.github.io/booking/>.
 Ganito ang hugis ng link ng bisita:
 
 ```
-https://rsmatic.github.io/booking/i.html?t=8Kd2mPqR4xVnT
+https://rsmatic.github.io/booking/invitation?t=8Kd2mPqR4xVnT
 ```
 
 ### Isang bisita, maraming upuan
@@ -127,7 +128,7 @@ pangalan sa isa sa kanila, maghihiwalay ulit ang imbitasyon nila.
 ### Coordinator
 
 Sa **Step 6 — Coordinator Access** pwede kang mag-isyu ng pangalawang susi para sa
-kung sino man ang tumutulong sa iyo. Binubuksan nito ang `/booking/c.html` —
+kung sino man ang tumutulong sa iyo. Binubuksan nito ang `/booking/coordinator` —
 **tingin lang**: sino ang darating, sino ang hindi, at bakit.
 
 | Nakikita ng coordinator | Hindi kaya |
@@ -300,8 +301,8 @@ API=https://aby41-api.rsmatic-dev.workers.dev KEY=ang-key-mo node test/e2e.js
 ```
 booking/
 ├── index.html            Admin console          ← /booking/
-├── c.html                Coordinator page       ← /booking/c.html
-├── i.html                Page ng bisita         ← /booking/i.html?t=TOKEN
+├── coordinator/index.html Coordinator page      ← /booking/coordinator
+├── invitation/index.html Page ng bisita         ← /booking/invitation?t=TOKEN
 ├── app/
 │   ├── config.js         URL ng API (ito lang ang binabago pagka-deploy)
 │   ├── themes.js         Ang dalawampung tema na makikita sa picker
@@ -323,7 +324,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            122 API checks laban sa tumatakbong server
+    ├── e2e.js            133 checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 

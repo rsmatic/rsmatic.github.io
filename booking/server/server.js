@@ -36,6 +36,10 @@ const MIME = {
 /** Only these may be served. Nothing under server/ or worker/ is reachable. */
 function resolveStatic(pathname) {
   if (pathname === '/' || pathname === '/index.html') return 'index.html';
+  // The two guest-facing pages live in folders so their URL has no .html.
+  if (pathname === '/invitation' || pathname === '/invitation/') return 'invitation/index.html';
+  if (pathname === '/coordinator' || pathname === '/coordinator/') return 'coordinator/index.html';
+  // The old addresses still work; each forwards to the new one.
   if (pathname === '/i.html') return 'i.html';
   if (pathname === '/c.html') return 'c.html';
   if (/^\/app\/[A-Za-z0-9._-]+$/.test(pathname)) return pathname.slice(1);
@@ -99,11 +103,10 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, result.status, result.data);
     }
 
-    // Links from the first version of this app: /i/<token>. Send them to the
-    // real page rather than serving it from a path where app/… would 404.
+    // Links from the first version of this app: /i/<token>.
     const legacy = pathname.match(/^\/i\/([^/]+)\/?$/);
     if (legacy) {
-      res.writeHead(302, { Location: '/i.html?t=' + encodeURIComponent(legacy[1]) });
+      res.writeHead(302, { Location: '/invitation?t=' + encodeURIComponent(legacy[1]) });
       return res.end();
     }
 

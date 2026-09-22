@@ -107,8 +107,45 @@ async function checkCorsCoversTheApp() {
     'missing ' + missing.join(', ') + ' from "' + allow + '"');
 }
 
+/**
+ * The guest pages live in folders so their address has no .html:
+ * /booking/invitation and /booking/coordinator. The local server mirrors
+ * what GitHub Pages does, and the old .html addresses still forward, so
+ * links already sent out keep working.
+ */
+async function checkPageRoutes() {
+  const home = await fetch(API + '/');
+  if (!(home.headers.get('content-type') || '').includes('text/html')) {
+    console.log('  SKIP  API-only host, no pages to serve');
+    return;
+  }
+
+  for (const path of ['/', '/invitation', '/invitation/', '/coordinator', '/coordinator/',
+    '/i.html', '/c.html', '/app/board.js', '/app/styles.css']) {
+    const res = await fetch(API + path, { redirect: 'manual' });
+    ok('serves ' + path, res.ok || res.status === 302, String(res.status));
+  }
+
+  const invitation = await (await fetch(API + '/invitation?t=whatever')).text();
+  ok('the invitation page reaches its assets from one folder up',
+    invitation.includes('"../app/invite.js"') && !invitation.includes('"app/invite.js"'));
+
+  const old = await (await fetch(API + '/i.html?t=whatever')).text();
+  ok('the old address forwards and keeps the token',
+    old.includes("location.replace('invitation/' + location.search"));
+
+  ok('nothing under server/ is reachable',
+    (await fetch(API + '/server/data/db.json')).status === 404);
+}
+
 async function main() {
   console.log('Testing ' + API + '\n');
+
+  console.log('== page addresses ==');
+  await checkPageRoutes().catch((err) => {
+    failed += 1;
+    console.log('  FAIL  could not check the page routes -> ' + err.message);
+  });
 
   console.log('== browser access ==');
   await checkCorsCoversTheApp().catch((err) => {
