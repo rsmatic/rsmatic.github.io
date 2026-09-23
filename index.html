@@ -271,6 +271,7 @@
   .proj-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
   .op-id{font-size:10px;letter-spacing:1.5px;color:var(--text-faint);text-transform:uppercase}
   .op-class{font-size:9.5px;letter-spacing:1.5px;padding:2px 7px;border:1px solid var(--warn);color:var(--warn);text-transform:uppercase}
+  .op-class.live{border-color:var(--accent);color:var(--accent)}
   .proj h3{font-family:var(--disp);font-size:15px;color:var(--line);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
   .proj p{font-size:12.5px;color:var(--text-dim);line-height:1.7;flex:1;margin-bottom:13px}
   .proj-foot{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -425,9 +426,21 @@
 <!-- PROJECTS -->
 <section id="projects">
   <div class="wrap">
-    <div class="sec-head reveal"><span class="sec-id">[ 03 ]</span><span class="sec-title">Intercepted Operations</span><span class="sec-sub">// sample — replace w/ real ops</span></div>
+    <div class="sec-head reveal"><span class="sec-id">[ 03 ]</span><span class="sec-title">Intercepted Operations</span><span class="sec-sub">// live builds + field samples</span></div>
     <div class="divider reveal"></div>
     <div class="proj-grid">
+      <article class="proj reveal">
+        <div class="proj-top"><span class="op-id">OP // 4D81</span><span class="op-class live">LIVE</span></div>
+        <h3>Orderko</h3>
+        <p>Full-stack ordering system for an overnight-oats shop. Customers build a jar option by option with live server-side pricing; the kitchen works a New → Ready queue; admins run people, menu, shop settings and reports. Delivery goes out through a Grab adapter — simulated driver or the live GrabExpress API, switched from settings — with map-based address lookup and a server-enforced delivery radius.</p>
+        <div class="proj-foot"><span class="proj-tech">React · Node · Express · Grab API</span><span class="proj-links"><a href="https://rsmatic.github.io/orderko/">DEMO↗</a><a href="https://github.com/rsmatic/orderko">SRC</a></span></div>
+      </article>
+      <article class="proj reveal">
+        <div class="proj-top"><span class="op-id">OP // 5F0C</span><span class="op-class live">LIVE</span></div>
+        <h3>Booking &amp; RSVP System</h3>
+        <p>Seat-level invitation and RSVP platform for events. One private link per seat, 20 themes, an invitation designer with photo upload, read-only coordinator access on its own key, and a seat board that locks as replies land. Static pages on GitHub Pages with the API on Cloudflare Workers + D1, and a local Node twin sharing one copy of the rules.</p>
+        <div class="proj-foot"><span class="proj-tech">Cloudflare Workers · D1 · Vanilla JS</span><span class="proj-links"><a href="https://rsmatic.github.io/booking/">DEMO↗</a><a href="https://github.com/rsmatic/rsmatic.github.io/tree/main/booking">SRC</a></span></div>
+      </article>
       <article class="proj reveal">
         <div class="proj-top"><span class="op-id">OP // 0A7F</span><span class="op-class">SAMPLE</span></div>
         <h3>AssetKo</h3>
