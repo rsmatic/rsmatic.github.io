@@ -132,6 +132,27 @@
   #pauseState { font-size: 14px; font-weight: 600; margin: 0; }
   #pausePanel.is-paused #pauseState { color: var(--no); }
 
+  /* On/Off switch for the links. */
+  button.switch {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 4px 4px 4px 0; border: 0; background: none; box-shadow: none;
+    color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  button.switch:hover:not(:disabled) { background: none; }
+  button.switch .track {
+    position: relative; width: 52px; height: 30px; border-radius: 999px; flex: none;
+    background: color-mix(in srgb, var(--no) 55%, transparent);
+    transition: background 0.2s;
+  }
+  button.switch .knob {
+    position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s;
+  }
+  button.switch[aria-checked="true"] .track { background: var(--ok); }
+  button.switch[aria-checked="true"] .knob { transform: translateX(22px); }
+  button.switch .switch-text { min-width: 2.2em; text-align: left; }
+  button.switch:focus-visible .track { outline: 2px solid var(--gold); outline-offset: 2px; }
+
   details.collapse { border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--panel); }
   details.collapse > summary {
     cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--gold);
@@ -234,19 +255,19 @@
         <div class="row" style="justify-content:space-between;align-items:flex-start">
           <div style="flex:1;min-width:220px">
             <label style="margin-bottom:4px">Invitation links</label>
-            <p id="pauseState">Open — guests can see the invitation and answer.</p>
-            <p class="tiny-text muted" style="margin:4px 0 0">Sent a link too early? Pause them all. Guests who open one see only your message below — no seat, date or venue — and cannot answer until you open them again. The links themselves do not change.</p>
+            <p id="pauseState">On — guests can see the invitation and answer.</p>
+            <p class="tiny-text muted" style="margin:4px 0 0">Sent a link too early? Turn them off. Guests who open one see only your message below — no seat, date or venue — and cannot answer until you turn them back on. The links themselves do not change.</p>
           </div>
-          <button type="button" id="pauseToggle">Pause all links</button>
+          <button type="button" class="switch" id="pauseToggle" role="switch" aria-checked="true" aria-label="Invitation links">
+            <span class="track"><span class="knob"></span></span>
+            <span class="switch-text" id="pauseToggleText">On</span>
+          </button>
         </div>
         <div class="field" style="margin-top:14px">
-          <label for="pausedMessage">Message while paused</label>
+          <label for="pausedMessage">Message while off</label>
           <textarea id="pausedMessage" maxlength="500" placeholder="This invitation is not ready yet. Please check back soon — we will let you know when it opens."></textarea>
         </div>
-        <div class="row" style="margin-top:10px">
-          <button class="tiny" type="button" id="pausedMessageSave">Save message</button>
-          <span class="tiny-text muted">Leave it empty to use the default shown above.</span>
-        </div>
+        <p class="tiny-text muted" style="margin:8px 0 0">Saves when you click outside the box. Leave it empty to use the default shown above.</p>
       </div>
 
       <details class="collapse">
@@ -398,7 +419,7 @@
       <h2><span class="step">7</span> Seat Board</h2>
       <p class="hint">Put a guest's name on a seat, copy the link, and send it over Messenger or Viber. When they confirm, the seat locks itself.</p>
 
-      <div id="pausedBanner" class="paused-banner hidden">Invitation links are paused. Guests who open one see only your message — turn them back on in Step 2.</div>
+      <div id="pausedBanner" class="paused-banner hidden">Invitation links are off. Guests who open one see only your message — turn them back on in Step 2.</div>
 
       <div id="stats" style="margin-bottom:16px"></div>
 

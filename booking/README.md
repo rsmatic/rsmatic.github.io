@@ -175,18 +175,18 @@ Para magdagdag ng tema: magdagdag ng bloke sa `app/styles.css`, ng entry sa
 ### I-pause ang mga link
 
 Naipadala mo ba ang link bago pa handa ang event? Sa **Step 2 — Event Details**, pindutin
-ang **Pause all links**. Habang naka-pause:
+ang switch ng *Invitation links* para gawing **Off**. Habang naka-Off:
 
 - ang bisitang magbubukas ng link ay makakakita lang ng *Coming soon* at ng mensahe mo —
   walang upuan, petsa o venue, pero nasa tema pa rin ng event;
 - hindi sila makakasagot (403), at hindi rin mabubuksan ang litrato;
 - may pulang paalala sa Seat Board para hindi mo makalimutan.
 
-Puwede mong isulat ang sarili mong mensahe sa *Message while paused* (hanggang 500 letra).
+Puwede mong isulat ang sarili mong mensahe sa *Message while off* (hanggang 500 letra); kusa itong nase-save paglabas mo sa kahon.
 Kapag walang laman, ito ang lalabas: *This invitation is not ready yet. Please check back
 soon — we will let you know when it opens.*
 
-Pindutin ang **Open the links** kapag handa na. Hindi nagbabago ang mga link, kaya hindi
+Ibalik sa **On** kapag handa na. Hindi nagbabago ang mga link, kaya hindi
 mo na kailangang magpadala ulit, at naitatabi ang mensahe para sa susunod.
 
 ### Upuan sa imbitasyon

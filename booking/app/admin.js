@@ -189,7 +189,7 @@
         '" data-event="' + escapeHtml(ev.id) + '">' +
         '<span class="name">' + escapeHtml(ev.title) + '</span>' +
         '<span class="meta">' + escapeHtml(formatDate(ev.eventDate)) + ' &middot; ' + count + ' seats' +
-          (ev.inviteStatus === 'paused' ? ' &middot; links paused' : '') + '</span>' +
+          (ev.inviteStatus === 'paused' ? ' &middot; links off' : '') + '</span>' +
         '</button>';
     }).join('');
     Array.prototype.forEach.call(host.querySelectorAll('[data-event]'), function (btn) {
@@ -385,11 +385,11 @@
     $('pausePanel').classList.toggle('is-paused', paused);
     $('pausedBanner').classList.toggle('hidden', !paused);
     $('pauseState').textContent = paused
-      ? 'Paused — guests see only the message below.'
-      : 'Open — guests can see the invitation and answer.';
-    var btn = $('pauseToggle');
-    btn.textContent = paused ? 'Open the links' : 'Pause all links';
-    btn.className = paused ? 'primary' : 'danger';
+      ? 'Off — guests see only the message below.'
+      : 'On — guests can see the invitation and answer.';
+    var sw = $('pauseToggle');
+    sw.setAttribute('aria-checked', paused ? 'false' : 'true');
+    $('pauseToggleText').textContent = paused ? 'Off' : 'On';
 
     // Same reason as the details form: a reload must not eat an unsaved edit.
     var box = $('pausedMessage');
@@ -509,16 +509,17 @@
         return load();
       })
       .then(function () {
-        toast(pausing ? 'Links paused. Guests now see your message.' : 'Links are open again.');
+        toast(pausing ? 'Links are off. Guests now see your message.' : 'Links are on again.');
       })
       .catch(fail);
   });
 
   $('pausedMessage').addEventListener('input', function () { state.pausedMessageDirty = true; });
 
-  $('pausedMessageSave').addEventListener('click', function () {
+  /* Saves when the admin leaves the box, like the design controls — no button. */
+  $('pausedMessage').addEventListener('change', function () {
     var ev = currentEvent();
-    if (!ev) return;
+    if (!ev || !state.pausedMessageDirty) return;
     api('/events/' + ev.id, { method: 'PATCH', body: { pausedMessage: $('pausedMessage').value } })
       .then(function () {
         state.pausedMessageDirty = false;
