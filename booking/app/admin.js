@@ -16,6 +16,7 @@
     filter: 'all',
     search: '',
     detailDirty: false,
+    pausedMessageDirty: false,
     lastSnapshot: '',
   };
 
@@ -169,6 +170,7 @@
     renderThemes(ev);
     renderDesign(ev);
     renderCoordinator(ev);
+    renderPause(ev);
     fillDetailForm(ev);
     refreshLinkNotes();
     renderStats();
@@ -186,13 +188,15 @@
       return '<button type="button" class="event-card' + (ev.id === state.eventId ? ' active' : '') +
         '" data-event="' + escapeHtml(ev.id) + '">' +
         '<span class="name">' + escapeHtml(ev.title) + '</span>' +
-        '<span class="meta">' + escapeHtml(formatDate(ev.eventDate)) + ' &middot; ' + count + ' seats</span>' +
+        '<span class="meta">' + escapeHtml(formatDate(ev.eventDate)) + ' &middot; ' + count + ' seats' +
+          (ev.inviteStatus === 'paused' ? ' &middot; links paused' : '') + '</span>' +
         '</button>';
     }).join('');
     Array.prototype.forEach.call(host.querySelectorAll('[data-event]'), function (btn) {
       btn.addEventListener('click', function () {
         state.eventId = btn.getAttribute('data-event');
         state.detailDirty = false;
+        state.pausedMessageDirty = false;
         render();
       });
     });
@@ -374,6 +378,24 @@
       .catch(fail);
   }
 
+  /* ---- pausing the links ---- */
+
+  function renderPause(ev) {
+    var paused = ev.inviteStatus === 'paused';
+    $('pausePanel').classList.toggle('is-paused', paused);
+    $('pausedBanner').classList.toggle('hidden', !paused);
+    $('pauseState').textContent = paused
+      ? 'Paused — guests see only the message below.'
+      : 'Open — guests can see the invitation and answer.';
+    var btn = $('pauseToggle');
+    btn.textContent = paused ? 'Open the links' : 'Pause all links';
+    btn.className = paused ? 'primary' : 'danger';
+
+    // Same reason as the details form: a reload must not eat an unsaved edit.
+    var box = $('pausedMessage');
+    if (!state.pausedMessageDirty && document.activeElement !== box) box.value = ev.pausedMessage || '';
+  }
+
   function fillDetailForm(ev) {
     if (state.detailDirty) return;
     var map = {
@@ -471,6 +493,38 @@
         return load();
       })
       .then(function () { toast('Details updated.'); })
+      .catch(fail);
+  });
+
+  $('pauseToggle').addEventListener('click', function () {
+    var ev = currentEvent();
+    if (!ev) return;
+    var pausing = ev.inviteStatus !== 'paused';
+    var body = { inviteStatus: pausing ? 'paused' : 'open' };
+    // Pausing with a message typed but not saved should use that message.
+    if (pausing && state.pausedMessageDirty) body.pausedMessage = $('pausedMessage').value;
+    api('/events/' + ev.id, { method: 'PATCH', body: body })
+      .then(function () {
+        if ('pausedMessage' in body) state.pausedMessageDirty = false;
+        return load();
+      })
+      .then(function () {
+        toast(pausing ? 'Links paused. Guests now see your message.' : 'Links are open again.');
+      })
+      .catch(fail);
+  });
+
+  $('pausedMessage').addEventListener('input', function () { state.pausedMessageDirty = true; });
+
+  $('pausedMessageSave').addEventListener('click', function () {
+    var ev = currentEvent();
+    if (!ev) return;
+    api('/events/' + ev.id, { method: 'PATCH', body: { pausedMessage: $('pausedMessage').value } })
+      .then(function () {
+        state.pausedMessageDirty = false;
+        return load();
+      })
+      .then(function () { toast('Message saved.'); })
       .catch(fail);
   });
 

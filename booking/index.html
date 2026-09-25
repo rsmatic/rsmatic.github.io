@@ -121,6 +121,17 @@
   .theme-card .tnote { font-size: 11px; color: var(--dim); }
   .theme-card .tcheck { float: right; color: var(--gold); font-size: 13px; }
 
+  /* A paused event must be impossible to miss — it is why no one is answering. */
+  .paused-banner {
+    padding: 12px 16px; margin-bottom: 14px; border-radius: var(--radius);
+    border: 1px solid color-mix(in srgb, var(--no) 40%, transparent);
+    background: color-mix(in srgb, var(--no) 10%, transparent);
+    color: var(--no); font-size: 13px; font-weight: 600;
+  }
+  #pausePanel.is-paused { border-color: color-mix(in srgb, var(--no) 40%, transparent); }
+  #pauseState { font-size: 14px; font-weight: 600; margin: 0; }
+  #pausePanel.is-paused #pauseState { color: var(--no); }
+
   details.collapse { border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--panel); }
   details.collapse > summary {
     cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--gold);
@@ -218,6 +229,26 @@
     <section class="block">
       <h2><span class="step">2</span> Event Details</h2>
       <p class="hint">This is what guests see on their invitation.</p>
+
+      <div class="panel" id="pausePanel" style="margin-bottom:12px">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div style="flex:1;min-width:220px">
+            <label style="margin-bottom:4px">Invitation links</label>
+            <p id="pauseState">Open — guests can see the invitation and answer.</p>
+            <p class="tiny-text muted" style="margin:4px 0 0">Sent a link too early? Pause them all. Guests who open one see only your message below — no seat, date or venue — and cannot answer until you open them again. The links themselves do not change.</p>
+          </div>
+          <button type="button" id="pauseToggle">Pause all links</button>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label for="pausedMessage">Message while paused</label>
+          <textarea id="pausedMessage" maxlength="500" placeholder="This invitation is not ready yet. Please check back soon — we will let you know when it opens."></textarea>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="tiny" type="button" id="pausedMessageSave">Save message</button>
+          <span class="tiny-text muted">Leave it empty to use the default shown above.</span>
+        </div>
+      </div>
+
       <details class="collapse">
         <summary id="detailSummary">Edit details</summary>
         <div class="body">
@@ -366,6 +397,8 @@
     <section class="block">
       <h2><span class="step">7</span> Seat Board</h2>
       <p class="hint">Put a guest's name on a seat, copy the link, and send it over Messenger or Viber. When they confirm, the seat locks itself.</p>
+
+      <div id="pausedBanner" class="paused-banner hidden">Invitation links are paused. Guests who open one see only your message — turn them back on in Step 2.</div>
 
       <div id="stats" style="margin-bottom:16px"></div>
 

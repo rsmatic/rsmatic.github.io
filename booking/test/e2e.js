@@ -336,6 +336,46 @@ async function main() {
   ok('a bad token cannot',
     !(await fetch(API + '/api/invite/nope/photo')).ok);
 
+  console.log('\n== pausing the links ==');
+  r = await call('/api/events');
+  ok('a new event has its links open',
+    r.j.events.find((e) => e.id === eventId).inviteStatus === 'open',
+    r.j.events.find((e) => e.id === eventId).inviteStatus);
+  ok('an unknown invite status -> 400',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { inviteStatus: 'maybe' } })).status === 400);
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { inviteStatus: 'paused', pausedMessage: '' } });
+  ok('the links can be paused', r.j.inviteStatus === 'paused', r.j.inviteStatus);
+
+  r = await call('/api/invite/' + a.token, { admin: false });
+  ok('a paused link says so', r.status === 200 && r.j.paused === true, JSON.stringify(r.j));
+  ok('with a default message when the host wrote none', /not ready yet/.test(r.j.message), r.j.message);
+  ok('and gives away no seat, date or venue',
+    !('seats' in r.j) && !('guestName' in r.j) && !('token' in r.j) &&
+    !('eventDate' in r.j.event) && !('venue' in r.j.event),
+    JSON.stringify(r.j));
+  ok('but keeps the look of the event', r.j.event.theme === 'emerald', r.j.event.theme);
+
+  await call('/api/events/' + eventId, { method: 'PATCH', body: { pausedMessage: '  Abangan! Malapit na.  ' } });
+  r = await call('/api/invite/' + a.token, { admin: false });
+  ok('the host can write their own message', r.j.message === 'Abangan! Malapit na.', r.j.message);
+  ok('the message is capped at 500 characters',
+    (await call('/api/events/' + eventId, { method: 'PATCH', body: { pausedMessage: 'x'.repeat(600) } }))
+      .j.pausedMessage.length === 500);
+  await call('/api/events/' + eventId, { method: 'PATCH', body: { pausedMessage: 'Abangan! Malapit na.' } });
+
+  r = await call('/api/invite/' + a.token, { admin: false, method: 'POST', body: { attending: true } });
+  ok('a paused link cannot answer', r.status === 403, r.status + ' ' + JSON.stringify(r.j));
+  ok('and the refusal carries the message', r.j && r.j.error === 'Abangan! Malapit na.', JSON.stringify(r.j));
+  ok('nor load the photo', (await fetch(API + '/api/invite/' + a.token + '/photo')).status === 403);
+  r = await call('/api/events');
+  ok('the refused answer changed nothing', !r.j.slots.find((s) => s.id === a.id).respondedAt);
+
+  r = await call('/api/events/' + eventId, { method: 'PATCH', body: { inviteStatus: 'open' } });
+  ok('the links can be opened again', r.j.inviteStatus === 'open', r.j.inviteStatus);
+  ok('and the message is kept for next time', r.j.pausedMessage === 'Abangan! Malapit na.', r.j.pausedMessage);
+  r = await call('/api/invite/' + a.token, { admin: false });
+  ok('the same link shows the invitation again', !r.j.paused && r.j.event.venue === 'Bahay namin');
+
   console.log('\n== guest confirms ==');
   r = await call('/api/invite/' + a.token, { admin: false, method: 'POST', body: { attending: true, message: 'Happy birthday Aby!' } });
   ok('confirm returns confirmed', r.j.status === 'confirmed', r.j.status);

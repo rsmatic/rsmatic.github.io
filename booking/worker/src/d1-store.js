@@ -26,7 +26,7 @@ const SLOT_COLUMNS = {
 
 const EVENT_COLUMNS = ['id', 'title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
   'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
-  'theme', 'ageDisplay', 'ageLabel', 'seatDisplay',
+  'theme', 'ageDisplay', 'ageLabel', 'seatDisplay', 'inviteStatus', 'pausedMessage',
   'photoShape', 'photoSize', 'borderStyle', 'cardCorners', 'cardAlign',
   'accentColor', 'borderColor', 'photoUpdatedAt', 'coordinatorKey', 'createdAt'];
 

@@ -98,7 +98,7 @@
   }
 
   function show(id) {
-    ['loading', 'invalid', 'card'].forEach(function (k) {
+    ['loading', 'invalid', 'paused', 'card'].forEach(function (k) {
       $(k).classList.toggle('hidden', k !== id);
     });
   }
@@ -280,6 +280,24 @@
     $('r-recap').innerHTML = rows.join('');
   }
 
+  /* The host paused the links: their message, on the event's own look. */
+  function renderPaused(data) {
+    var ev = data.event || {};
+    window.abyApplyTheme(ev.theme);
+    window.abyApplyColors(ev.accentColor, ev.borderColor);
+
+    var card = $('paused');
+    card.setAttribute('data-border', ev.borderStyle || 'double');
+    card.setAttribute('data-corners', ev.cardCorners || 'soft');
+    card.setAttribute('data-align', ev.cardAlign || 'center');
+
+    $('p-name').textContent = ev.celebrant || ev.title || '';
+    $('p-message').textContent = data.message || '';
+    $('footer').textContent = ev.hostName ? 'Hosted by ' + ev.hostName : '';
+    document.title = 'Invitation — ' + (ev.title || 'Coming soon');
+    show('paused');
+  }
+
   function renderSlot() {
     renderEvent();
     if (slot.respondedAt) renderResult();
@@ -358,6 +376,7 @@
       return res.json();
     })
     .then(function (data) {
+      if (data.paused) { renderPaused(data); return; }
       slot = data;
       renderSlot();
     })

@@ -172,6 +172,23 @@ Para magdagdag ng tema: magdagdag ng bloke sa `app/styles.css`, ng entry sa
 [`app/themes.js`](app/themes.js), at ng id sa `THEMES` sa
 [`api/core.js`](api/core.js). May test na tumitiyak na magkatugma ang huling dalawa.
 
+### I-pause ang mga link
+
+Naipadala mo ba ang link bago pa handa ang event? Sa **Step 2 — Event Details**, pindutin
+ang **Pause all links**. Habang naka-pause:
+
+- ang bisitang magbubukas ng link ay makakakita lang ng *Coming soon* at ng mensahe mo —
+  walang upuan, petsa o venue, pero nasa tema pa rin ng event;
+- hindi sila makakasagot (403), at hindi rin mabubuksan ang litrato;
+- may pulang paalala sa Seat Board para hindi mo makalimutan.
+
+Puwede mong isulat ang sarili mong mensahe sa *Message while paused* (hanggang 500 letra).
+Kapag walang laman, ito ang lalabas: *This invitation is not ready yet. Please check back
+soon — we will let you know when it opens.*
+
+Pindutin ang **Open the links** kapag handa na. Hindi nagbabago ang mga link, kaya hindi
+mo na kailangang magpadala ulit, at naitatabi ang mensahe para sa susunod.
+
 ### Upuan sa imbitasyon
 
 Sa **Step 2 — Event Details** may *Seats on the invitation*. Kapag isang pangalan ang
@@ -260,6 +277,7 @@ npx wrangler d1 execute aby41 --remote --file=worker/migrations/0002-age-label.s
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0003-design-and-photo.sql --config worker/wrangler.toml
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0004-coordinator.sql --config worker/wrangler.toml
 npx wrangler d1 execute aby41 --remote --file=worker/migrations/0005-seat-display.sql --config worker/wrangler.toml
+npx wrangler d1 execute aby41 --remote --file=worker/migrations/0006-invite-pause.sql --config worker/wrangler.toml
 ```
 
 Para sa bagong database, sapat na ang `schema.sql` — nandoon na ang lahat ng column.
@@ -340,7 +358,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            139 checks laban sa tumatakbong server
+    ├── e2e.js            155 checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 

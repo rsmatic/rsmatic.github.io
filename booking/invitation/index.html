@@ -145,6 +145,14 @@
   .state { text-align: center; padding: 60px 20px; color: var(--dim); }
   .state h2 { color: var(--text); font-size: 25px; margin-bottom: 8px; }
 
+  /* paused state: the host's message, on the event's own card */
+  .paused-msg { text-align: center; padding: 8px 0 4px; }
+  .paused-msg .icon { font-size: 40px; line-height: 1; color: var(--gold); }
+  .paused-msg h2 { font-size: 27px; margin: 12px 0 10px; }
+  .paused-msg p { color: var(--dim); font-size: 15px; margin: 0 auto; max-width: 40ch; white-space: pre-line; }
+  .card[data-align="left"] .paused-msg { text-align: left; }
+  .card[data-align="left"] .paused-msg p { margin-left: 0; }
+
   .footer { text-align: center; color: var(--faint); font-size: 12px; margin-top: 24px; }
 
   .hidden { display: none !important; }
@@ -163,6 +171,19 @@
   <div id="invalid" class="state hidden">
     <h2>Invitation not found</h2>
     <p>The link may be wrong, or it may have been replaced. Please ask whoever invited you for a new one.</p>
+  </div>
+
+  <div id="paused" class="card hidden">
+    <div class="crest">
+      <div class="eyebrow">Invitation</div>
+      <div class="name" id="p-name"></div>
+      <div class="rule"></div>
+    </div>
+    <div class="paused-msg">
+      <div class="icon">&#10047;</div>
+      <h2>Coming soon</h2>
+      <p id="p-message"></p>
+    </div>
   </div>
 
   <div id="card" class="card hidden">

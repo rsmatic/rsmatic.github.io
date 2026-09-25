@@ -14,7 +14,7 @@ export class HttpError extends Error {
 
 export const EVENT_FIELDS = ['title', 'celebrant', 'nickname', 'birthDate', 'eventDate',
   'startTime', 'venue', 'venueMapUrl', 'dressCode', 'note', 'rsvpDeadline', 'hostName',
-  'theme', 'ageDisplay', 'ageLabel', 'seatDisplay',
+  'theme', 'ageDisplay', 'ageLabel', 'seatDisplay', 'inviteStatus', 'pausedMessage',
   'photoShape', 'photoSize', 'borderStyle', 'cardCorners', 'cardAlign',
   'accentColor', 'borderColor'];
 
@@ -45,6 +45,15 @@ export const DEFAULT_AGE_DISPLAY = 'number';
 /** How much of the seating the guest is told: which seats, how many, or neither. */
 export const SEAT_DISPLAYS = ['full', 'count', 'hidden'];
 export const DEFAULT_SEAT_DISPLAY = 'full';
+
+/**
+ * Whether the links already sent can be opened. 'paused' shows the guest
+ * only a short message — for links that went out before the event was ready.
+ */
+export const INVITE_STATUSES = ['open', 'paused'];
+export const DEFAULT_INVITE_STATUS = 'open';
+export const DEFAULT_PAUSED_MESSAGE =
+  'This invitation is not ready yet. Please check back soon — we will let you know when it opens.';
 
 /** Keep in sync with app/themes.js — the ids are the same list. */
 export const THEMES = ['rose-gold', 'midnight', 'emerald', 'burgundy', 'noir',
@@ -111,6 +120,13 @@ function normalizeSeatDisplay(value) {
   if (!mode) return DEFAULT_SEAT_DISPLAY;
   if (!SEAT_DISPLAYS.includes(mode)) throw new HttpError(400, 'Unknown seat display: ' + mode);
   return mode;
+}
+
+function normalizeInviteStatus(value) {
+  const status = str(value);
+  if (!status) return DEFAULT_INVITE_STATUS;
+  if (!INVITE_STATUSES.includes(status)) throw new HttpError(400, 'Unknown invite status: ' + status);
+  return status;
 }
 
 function normalizeTheme(value) {
@@ -276,6 +292,28 @@ function publicSlotView(slot, event, seats) {
 }
 
 /**
+ * All a guest sees while the links are paused: the host's message on the
+ * event's own colours. No seats, no date, no venue — they may not be final.
+ */
+function pausedView(event) {
+  return {
+    paused: true,
+    message: str(event.pausedMessage) || DEFAULT_PAUSED_MESSAGE,
+    event: {
+      title: event.title,
+      celebrant: event.celebrant,
+      theme: event.theme,
+      borderStyle: event.borderStyle,
+      cardCorners: event.cardCorners,
+      cardAlign: event.cardAlign,
+      accentColor: event.accentColor,
+      borderColor: event.borderColor,
+      hostName: event.hostName,
+    },
+  };
+}
+
+/**
  * @param {object} opts
  * @param {object} opts.store    storage adapter (see server/file-store.js)
  * @param {string} opts.adminKey secret that guards every /api/events and /api/slots route
@@ -316,6 +354,12 @@ export function createApi({ store, adminKey }) {
       if (!slot) throw new HttpError(404, 'This invitation is not valid.');
       const event = await store.getEvent(slot.eventId);
       if (!event) throw new HttpError(404, 'This event no longer exists.');
+
+      // Checked before anything else is read, so a paused link gives away nothing.
+      if (event.inviteStatus === 'paused') {
+        if (method === 'GET' && !rest[1]) return { status: 200, data: pausedView(event) };
+        throw new HttpError(403, str(event.pausedMessage) || DEFAULT_PAUSED_MESSAGE);
+      }
 
       // Everything this guest holds, so the invitation can show it as one.
       const seatsHeld = slot.guestName
@@ -419,6 +463,8 @@ export function createApi({ store, adminKey }) {
         event.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
         event.ageLabel = str(body.ageLabel).slice(0, 40);
         event.seatDisplay = normalizeSeatDisplay(body.seatDisplay);
+        event.inviteStatus = normalizeInviteStatus(body.inviteStatus);
+        event.pausedMessage = str(body.pausedMessage).slice(0, 500);
         event.photoUpdatedAt = '';
         applyDesign(event, body, true);
         await store.createEvent(event);
@@ -518,6 +564,8 @@ export function createApi({ store, adminKey }) {
         if ('ageDisplay' in body) patch.ageDisplay = normalizeAgeDisplay(body.ageDisplay);
         if ('ageLabel' in body) patch.ageLabel = str(body.ageLabel).slice(0, 40);
         if ('seatDisplay' in body) patch.seatDisplay = normalizeSeatDisplay(body.seatDisplay);
+        if ('inviteStatus' in body) patch.inviteStatus = normalizeInviteStatus(body.inviteStatus);
+        if ('pausedMessage' in body) patch.pausedMessage = str(body.pausedMessage).slice(0, 500);
         applyDesign(patch, body, false);
         const updated = await store.updateEvent(eventId, patch);
         if (!updated) throw new HttpError(404, 'Event not found.');
