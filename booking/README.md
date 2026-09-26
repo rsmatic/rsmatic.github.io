@@ -358,7 +358,7 @@ booking/
 │   ├── file-store.js     Storage sa JSON file
 │   └── data/db.json      Lokal na database (hindi naka-commit)
 └── test/
-    ├── e2e.js            155 checks laban sa tumatakbong server
+    ├── e2e.js            154 checks laban sa tumatakbong server
     └── admin-form.js     7 check sa admin form, walang browser na kailangan
 ```
 

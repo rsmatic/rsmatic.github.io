@@ -39,9 +39,8 @@ function resolveStatic(pathname) {
   // The two guest-facing pages live in folders so their URL has no .html.
   if (pathname === '/invitation' || pathname === '/invitation/') return 'invitation/index.html';
   if (pathname === '/coordinator' || pathname === '/coordinator/') return 'coordinator/index.html';
-  // The old addresses still work; each forwards to the new one.
+  // The old invitation address still works; it forwards to the new one.
   if (pathname === '/i.html') return 'i.html';
-  if (pathname === '/c.html') return 'c.html';
   if (/^\/app\/[A-Za-z0-9._-]+$/.test(pathname)) return pathname.slice(1);
   return null;
 }

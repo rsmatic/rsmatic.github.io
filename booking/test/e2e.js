@@ -121,7 +121,7 @@ async function checkPageRoutes() {
   }
 
   for (const path of ['/', '/invitation', '/invitation/', '/coordinator', '/coordinator/',
-    '/i.html', '/c.html', '/app/board.js', '/app/styles.css']) {
+    '/i.html', '/app/board.js', '/app/styles.css']) {
     const res = await fetch(API + path, { redirect: 'manual' });
     ok('serves ' + path, res.ok || res.status === 302, String(res.status));
   }
