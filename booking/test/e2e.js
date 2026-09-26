@@ -121,7 +121,7 @@ async function checkPageRoutes() {
   }
 
   for (const path of ['/', '/invitation', '/invitation/', '/coordinator', '/coordinator/',
-    '/i.html', '/app/board.js', '/app/styles.css']) {
+    '/app/board.js', '/app/styles.css']) {
     const res = await fetch(API + path, { redirect: 'manual' });
     ok('serves ' + path, res.ok || res.status === 302, String(res.status));
   }
@@ -130,9 +130,9 @@ async function checkPageRoutes() {
   ok('the invitation page reaches its assets from one folder up',
     invitation.includes('"../app/invite.js"') && !invitation.includes('"app/invite.js"'));
 
-  const old = await (await fetch(API + '/i.html?t=whatever')).text();
-  ok('the old address forwards and keeps the token',
-    old.includes("location.replace('invitation/' + location.search"));
+  ok('the old i.html and c.html addresses are gone',
+    (await fetch(API + '/i.html?t=whatever')).status === 404 &&
+    (await fetch(API + '/c.html')).status === 404);
 
   ok('nothing under server/ is reachable',
     (await fetch(API + '/server/data/db.json')).status === 404);
