@@ -154,19 +154,15 @@
       cells =
         '<div class="value' + (s.guestName ? '' : ' empty') + '">' +
           escapeHtml(s.guestName || '\u2014') + '</div>' +
-        '<div class="value' + (s.guestContact ? '' : ' empty') + '">' +
-          escapeHtml(s.guestContact || '\u2014') + '</div>' +
         '<div class="actions"><span class="badge ' + s.status + '">' +
           STATUS_LABEL[s.status] + '</span></div>';
     } else {
       cells =
         '<div><input data-field="guestName" placeholder="Guest name" value="' + escapeHtml(s.guestName) + '" /></div>' +
-        '<div><input data-field="guestContact" placeholder="Viber / FB (optional)" value="' + escapeHtml(s.guestContact || '') + '" /></div>' +
         '<div class="actions">' +
           '<span class="badge ' + s.status + '">' + STATUS_LABEL[s.status] + '</span>' +
           '<button class="tiny" data-act="link" type="button" ' + named + '>Copy link</button>' +
           '<button class="tiny" data-act="msg" type="button" ' + named + '>Message</button>' +
-          '<button class="tiny ghost" data-act="share" type="button" ' + named + '>Share</button>' +
           '<button class="tiny ghost" data-act="reset" type="button" ' + (s.respondedAt ? '' : 'disabled') + '>Reset</button>' +
           '<button class="tiny ghost" data-act="token" type="button">New link</button>' +
           (o.allowRemove ? '<button class="tiny danger" data-act="del" type="button">Remove</button>' : '') +
@@ -241,14 +237,6 @@
             copyText(o.message(slot)).then(function () {
               o.done('Full message copied — paste it into Messenger or Viber.');
             });
-          } else if (act === 'share') {
-            if (navigator.share) {
-              navigator.share({ title: 'Invitation', text: o.message(slot) }).catch(function () {});
-            } else {
-              copyText(o.message(slot)).then(function () {
-                o.done('Sharing is not available here — the message was copied instead.');
-              });
-            }
           } else if (act === 'reset') {
             if (!confirm('Reset the answer from ' + (slot.guestName || 'this guest') +
               '? Their confirmation will be erased.')) return;
